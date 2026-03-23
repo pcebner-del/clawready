@@ -68,7 +68,7 @@ export default function Pricing() {
             {/* CTA */}
             <div className="px-8 pb-8">
               <a
-                href="https://buy.stripe.com/test_clawready"
+                href="https://buy.stripe.com/test_aFabJ0asL7Dv4ZT0YJ1RC00"
                 className="block w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-lg py-4 rounded-xl text-center transition-all duration-200 glow-blue-sm"
               >
                 Get ClawReady — $29

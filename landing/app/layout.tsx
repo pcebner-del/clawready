@@ -8,8 +8,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'ClawReady — OpenClaw for Windows in One Click',
     description: 'Skip the nightmare WSL2 setup. ClawReady installs OpenClaw on Windows automatically in 5 minutes.',
+    url: 'https://clawreadyapp.com',
+    siteName: 'ClawReady',
     type: 'website',
   },
+  metadataBase: new URL('https://clawreadyapp.com'),
 }
 
 export default function RootLayout({
