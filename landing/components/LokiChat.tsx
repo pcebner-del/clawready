@@ -141,11 +141,12 @@ export default function LokiChat() {
       {/* Floating button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg border border-[#1a2a4a] hover:scale-105 active:scale-95 transition-transform"
-        style={{ background: '#0a1628' }}
-        aria-label="Open Loki chat assistant"
+        className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg border border-[#1a2a4a] hover:scale-105 active:scale-95 transition-transform bg-blue-600 hover:bg-blue-500"
+        aria-label="Open install assistant"
       >
-        🐍
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
+        </svg>
       </button>
     </div>
   )

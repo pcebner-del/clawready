@@ -43,7 +43,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+    <section className="relative pt-32 pb-20 px-4 overflow-x-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-600/5 rounded-full blur-3xl" />
@@ -70,7 +70,7 @@ export default function Hero() {
               <span className="text-blue-300 text-sm font-medium">Windows-ready installer for OpenClaw</span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl font-extrabold text-white leading-[1.1] mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6">
               Get{' '}
               <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent">
                 OpenClaw
