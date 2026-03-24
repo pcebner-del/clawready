@@ -21,11 +21,18 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
+            <svg className="w-8 h-8 -rotate-45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="rocketGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2C12 2 7 7 7 13c0 2.5 1 4.5 2.5 6L12 22l2.5-3C16 17.5 17 15.5 17 13c0-6-5-11-5-11z" fill="url(#rocketGrad)" />
+              <circle cx="12" cy="12" r="2" fill="#050a14" />
+              <path d="M9 15.5C7.5 16.5 6 18 5.5 20c1.5 0 3.5-.5 5-2" fill="#3b82f6" opacity="0.7" />
+              <path d="M15 15.5C16.5 16.5 18 18 18.5 20c-1.5 0-3.5-.5-5-2" fill="#3b82f6" opacity="0.7" />
+            </svg>
             <span className="font-bold text-white text-lg tracking-tight">ClawReady</span>
           </div>
 
