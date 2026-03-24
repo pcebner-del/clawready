@@ -41,7 +41,7 @@ export default function Navbar() {
             href="#pricing"
             className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors glow-blue-sm"
           >
-            Get ClawReady — $29
+            Get ClawReady — $19
           </a>
         </div>
       </div>

@@ -50,7 +50,7 @@ export default function Testimonial() {
           {[
             { value: '< 5 min', label: 'Typical install time' },
             { value: '100%', label: 'Of testers got it working' },
-            { value: '$29', label: 'One-time, no subscription' },
+            { value: '$19', label: 'One-time, no subscription' },
           ].map((stat, i) => (
             <div key={i} className="text-center">
               <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-1">

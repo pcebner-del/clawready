@@ -92,7 +92,7 @@ export default function Hero() {
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
                   <path d="M13 2L3 14h8l-2 8 10-12h-8z" />
                 </svg>
-                Get ClawReady — $29
+                Get ClawReady — $19
               </a>
               <a
                 href="#how-it-works"

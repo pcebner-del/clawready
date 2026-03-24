@@ -40,7 +40,7 @@ export default function Pricing() {
             {/* Header */}
             <div className="px-8 pt-8 pb-6 border-b border-blue-500/10">
               <div className="flex items-end gap-2 mb-2">
-                <span className="text-6xl font-extrabold text-white">$29</span>
+                <span className="text-6xl font-extrabold text-white">$19</span>
                 <span className="text-slate-400 pb-2">one-time</span>
               </div>
               <p className="text-slate-400">
@@ -68,10 +68,10 @@ export default function Pricing() {
             {/* CTA */}
             <div className="px-8 pb-8">
               <a
-                href="https://buy.stripe.com/test_aFabJ0asL7Dv4ZT0YJ1RC00"
+                href="https://buy.stripe.com/test_fZueVc44n7Dv3VP6j31RC01"
                 className="block w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-lg py-4 rounded-xl text-center transition-all duration-200 glow-blue-sm"
               >
-                Get ClawReady — $29
+                Get ClawReady — $19
               </a>
               <p className="text-center text-slate-600 text-xs mt-3">
                 Secure checkout via Stripe. Instant download after payment.
