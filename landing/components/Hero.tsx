@@ -89,11 +89,8 @@ export default function Hero() {
                 href="#pricing"
                 className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg px-8 py-4 rounded-xl transition-all duration-200 glow-blue"
               >
-                <svg className="w-5 h-5 -rotate-45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C12 2 7 7 7 13c0 2.5 1 4.5 2.5 6L12 22l2.5-3C16 17.5 17 15.5 17 13c0-6-5-11-5-11z" fill="white" />
-                  <circle cx="12" cy="12" r="2" fill="#1d4ed8" />
-                  <path d="M9 15.5C7.5 16.5 6 18 5.5 20c1.5 0 3.5-.5 5-2" fill="white" opacity="0.7" />
-                  <path d="M15 15.5C16.5 16.5 18 18 18.5 20c-1.5 0-3.5-.5-5-2" fill="white" opacity="0.7" />
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 2L3 14h8l-2 8 10-12h-8z" />
                 </svg>
                 Get ClawReady — $29
               </a>
