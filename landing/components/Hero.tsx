@@ -70,7 +70,7 @@ export default function Hero() {
               <span className="text-blue-300 text-sm font-medium">Windows-ready installer for OpenClaw</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6 break-words">
               Get{' '}
               <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent">
                 OpenClaw
@@ -79,7 +79,7 @@ export default function Hero() {
               <span className="text-white">in 5 minutes.</span>
             </h1>
 
-            <p className="text-xl text-slate-400 leading-relaxed mb-8">
+            <p className="text-lg sm:text-xl text-slate-400 leading-relaxed mb-8 break-words">
               ClawReady automates the entire WSL2 setup — so you skip the nightmare and go straight
               to having an AI agent running 24/7 on your PC.
             </p>
@@ -129,7 +129,7 @@ export default function Hero() {
           </div>
 
           {/* Right: Terminal animation */}
-          <div className="relative">
+          <div className="relative w-full min-w-0 overflow-hidden">
             <div className="bg-[#0a1628] rounded-2xl border border-blue-500/20 overflow-hidden shadow-2xl glow-blue">
               {/* Terminal header */}
               <div className="flex items-center gap-2 px-4 py-3 bg-[#0f2040] border-b border-blue-500/10">
