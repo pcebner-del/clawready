@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="antialiased">{children}<LokiChat /></body>
+      <body className="antialiased overflow-x-hidden">{children}<LokiChat /></body>
     </html>
   )
 }

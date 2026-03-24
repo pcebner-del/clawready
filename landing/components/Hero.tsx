@@ -63,7 +63,7 @@ export default function Hero() {
       <div className="relative max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left: Copy */}
-          <div>
+          <div className="min-w-0">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 mb-8">
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
