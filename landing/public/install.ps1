@@ -371,13 +371,16 @@ fi
 echo "CLAWREADY_SUCCESS"
 '@
 
-    # Write script to WSL filesystem directly (avoids Windows CRLF + wslpath issues)
-    $scriptLines = $installScript -split "`n"
+    # Encode script as base64 to avoid ALL line ending issues (CRLF vs LF)
+    $cleanScript = $installScript -replace "`r`n", "`n" -replace "`r", "`n"
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($cleanScript)
+    $b64 = [Convert]::ToBase64String($bytes)
+
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
 
-    # Pipe script content to WSL and save as /tmp/clawready-install.sh
-    $scriptLines | wsl -d Ubuntu-22.04 -- bash -c "cat > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
+    # Decode base64 in WSL and save to /tmp — guaranteed LF endings
+    wsl -d Ubuntu-22.04 -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
 
     # Execute the install script
     $output = wsl -d Ubuntu-22.04 -- bash /tmp/clawready-install.sh 2>&1
