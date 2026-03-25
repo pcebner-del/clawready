@@ -419,7 +419,7 @@ function Set-BootTask {
 
     # WSL command to start OpenClaw via systemd
     $wslCommand = "C:\Windows\System32\wsl.exe"
-    $wslArgs    = '-d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw system start --daemon" &'
+    $wslArgs    = '-d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw gateway start" &'
 
     $action  = New-ScheduledTaskAction -Execute $wslCommand -Argument $wslArgs
     $trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -941,7 +941,7 @@ function Start-OpenClaw {
 
     try {
         # Start OpenClaw in background inside WSL2
-        wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw system start --daemon > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
+        wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
         Start-Sleep -Seconds 3
         Write-OK "OpenClaw started in background"
     } catch {
@@ -977,7 +977,7 @@ function Show-Success {
     Write-Host "    2. It will auto-start on every Windows login" -ForegroundColor Gray
     Write-Host "    3. Message it via Telegram (if configured)" -ForegroundColor Gray
     Write-Host "    4. To restart manually: " -NoNewline -ForegroundColor Gray
-    Write-Host "wsl -d Ubuntu-22.04 -- openclaw system start" -ForegroundColor Blue
+    Write-Host "wsl -d Ubuntu-22.04 -- openclaw gateway start" -ForegroundColor Blue
     Write-Host ""
     Write-Host "  Thank you for using ClawReady!" -ForegroundColor Blue
     Write-Host ""
