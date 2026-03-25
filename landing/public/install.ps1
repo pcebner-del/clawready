@@ -371,16 +371,17 @@ fi
 echo "CLAWREADY_SUCCESS"
 '@
 
-    # Write the script to a temp file and execute it
-    $tempScript = [System.IO.Path]::GetTempFileName() + ".sh"
-    $installScript | Out-File -FilePath $tempScript -Encoding UTF8 -NoNewline
+    # Write script to WSL filesystem directly (avoids Windows CRLF + wslpath issues)
+    $scriptLines = $installScript -split "`n"
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
 
-    # Convert Windows path to WSL path
-    $wslTempPath = wsl -d Ubuntu-22.04 -- wslpath $tempScript.Replace('\', '/')
+    # Pipe script content to WSL and save as /tmp/clawready-install.sh
+    $scriptLines | wsl -d Ubuntu-22.04 -- bash -c "cat > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
 
     # Execute the install script
-    $output = wsl -d Ubuntu-22.04 -- bash $wslTempPath 2>&1
-    Remove-Item $tempScript -ErrorAction SilentlyContinue
+    $output = wsl -d Ubuntu-22.04 -- bash /tmp/clawready-install.sh 2>&1
+    $ErrorActionPreference = $prevPref
 
     # Print output
     $output | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
