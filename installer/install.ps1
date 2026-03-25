@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    ClawReady — OpenClaw Windows Installer
+    ClawReady - OpenClaw Windows Installer
 .DESCRIPTION
     Automates the complete setup of OpenClaw on Windows:
     - WSL2 enablement and Ubuntu installation
@@ -14,15 +14,15 @@
     - Browser-based setup wizard for API key, Telegram, and agent config
 .NOTES
     Run as Administrator. Windows 10 2004+ or Windows 11 required.
-    ClawReady v1.0 — https://clawready.dev
+    ClawReady v1.0 - https://clawready.dev
 #>
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Configuration
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 $CR_VERSION    = "1.0.0"
 $UBUNTU_DISTRO = "Ubuntu-22.04"
 $NODE_VERSION  = "lts"
@@ -30,21 +30,17 @@ $OPENCLAW_PKG  = "openclaw"
 $WIZARD_PORT   = 7230
 $TASK_NAME     = "ClawReady-OpenClaw"
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Console output helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Write-Header {
     Clear-Host
     Write-Host ""
-    Write-Host "  ██████╗██╗      █████╗ ██╗    ██╗██████╗ ███████╗ █████╗ ██████╗ ██╗   ██╗" -ForegroundColor Blue
-    Write-Host " ██╔════╝██║     ██╔══██╗██║    ██║██╔══██╗██╔════╝██╔══██╗██╔══██╗╚██╗ ██╔╝" -ForegroundColor Blue
-    Write-Host " ██║     ██║     ███████║██║ █╗ ██║██████╔╝█████╗  ███████║██║  ██║ ╚████╔╝ " -ForegroundColor Cyan
-    Write-Host " ██║     ██║     ██╔══██║██║███╗██║██╔══██╗██╔══╝  ██╔══██║██║  ██║  ╚██╔╝  " -ForegroundColor Cyan
-    Write-Host " ╚██████╗███████╗██║  ██║╚███╔███╔╝██║  ██║███████╗██║  ██║██████╔╝   ██║   " -ForegroundColor Blue
-    Write-Host "  ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝    ╚═╝  " -ForegroundColor Blue
+    Write-Host "  ClawReady - OpenClaw for Windows" -ForegroundColor Blue
+    Write-Host "  =================================" -ForegroundColor Blue
     Write-Host ""
     Write-Host "  OpenClaw Windows Installer v$CR_VERSION" -ForegroundColor White
-    Write-Host "  ─────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  -------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
 }
 
@@ -79,7 +75,7 @@ function Write-Fail {
 }
 
 function Write-Divider {
-    Write-Host "  ─────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  -------------------------------------------------" -ForegroundColor DarkGray
 }
 
 function Pause-ForUser {
@@ -89,9 +85,9 @@ function Pause-ForUser {
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 1: Administrator check
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Assert-Administrator {
     Write-Step "Checking administrator privileges..."
     $currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -117,9 +113,9 @@ function Assert-Administrator {
     Write-OK "Running as Administrator"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 2: Windows version check
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Assert-WindowsVersion {
     Write-Step "Checking Windows version..."
 
@@ -136,12 +132,12 @@ function Assert-WindowsVersion {
         exit 1
     }
 
-    Write-OK "$caption (build $buildNumber) — WSL2 compatible"
+    Write-OK "$caption (build $buildNumber) - WSL2 compatible"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 3: Enable WSL2 and Virtual Machine Platform
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Enable-WSL2 {
     Write-Step "Checking WSL2 status..."
 
@@ -184,7 +180,7 @@ function Enable-WSL2 {
         Write-Host ""
         Write-Host "  After rebooting:" -ForegroundColor White
         Write-Host "    1. Open PowerShell as Administrator" -ForegroundColor Gray
-        Write-Host "    2. Re-run this script — it will continue from where it left off" -ForegroundColor Gray
+        Write-Host "    2. Re-run this script - it will continue from where it left off" -ForegroundColor Gray
         Write-Host ""
         $choice = Read-Host "  Reboot now? [Y/n]"
         if ($choice -ne 'n' -and $choice -ne 'N') {
@@ -208,9 +204,9 @@ function Enable-WSL2 {
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 4: Install Ubuntu
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
@@ -258,9 +254,9 @@ function Install-Ubuntu {
     Write-OK "Ubuntu verified and ready"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 5: Configure systemd in WSL2
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Set-WSLSystemd {
     Write-Step "Configuring systemd in WSL2..."
 
@@ -319,9 +315,9 @@ echo "done"
     Write-OK "WSL2 restarted with systemd enabled"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 6: Install nvm + Node.js + OpenClaw inside WSL2
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Install-NodeAndOpenClaw {
     Write-Step "Installing nvm, Node.js, and OpenClaw inside WSL2..."
     Write-Host "  (This may take 3-5 minutes)" -ForegroundColor DarkGray
@@ -404,9 +400,9 @@ echo "CLAWREADY_SUCCESS"
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 7: Create Task Scheduler boot task
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Set-BootTask {
     Write-Step "Creating Windows boot task for OpenClaw auto-start..."
 
@@ -445,12 +441,12 @@ function Set-BootTask {
         -Description "Starts OpenClaw AI agent on Windows boot (installed by ClawReady)" `
         -Force | Out-Null
 
-    Write-OK "Boot task '$TASK_NAME' created — OpenClaw will start on every login"
+    Write-OK "Boot task '$TASK_NAME' created - OpenClaw will start on every login"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 8: Configure power settings (prevent sleep)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Set-PowerSettings {
     Write-Step "Configuring power settings to prevent sleep..."
 
@@ -459,27 +455,27 @@ function Set-PowerSettings {
         powercfg /change standby-timeout-ac 0 2>&1 | Out-Null
         # Disable hibernate on AC power
         powercfg /change hibernate-timeout-ac 0 2>&1 | Out-Null
-        # Disable monitor timeout on AC power (optional — set to 30 min)
+        # Disable monitor timeout on AC power (optional - set to 30 min)
         powercfg /change monitor-timeout-ac 30 2>&1 | Out-Null
         # Disable hard disk timeout on AC power
         powercfg /change disk-timeout-ac 0 2>&1 | Out-Null
 
-        # Also prevent sleep on battery (conservative — 60 min)
+        # Also prevent sleep on battery (conservative - 60 min)
         powercfg /change standby-timeout-dc 60 2>&1 | Out-Null
 
         # Request a system availability from Windows
         powercfg /requestsoverride PROCESS powershell.exe SYSTEM 2>&1 | Out-Null
 
-        Write-OK "Sleep disabled on AC power — OpenClaw stays online 24/7"
+        Write-OK "Sleep disabled on AC power - OpenClaw stays online 24/7"
     } catch {
         Write-Warn "Could not fully configure power settings: $_"
         Write-Warn "You may need to disable sleep manually in Settings > Power."
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 9: Disable Windows Update active hours interference
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Set-WindowsUpdatePolicy {
     Write-Step "Hardening Windows Update settings..."
 
@@ -501,16 +497,16 @@ function Set-WindowsUpdatePolicy {
         # Disable auto-restart with logged on users
         Set-ItemProperty -Path $wuPath -Name "NoAutoRebootWithLoggedOnUsers" -Value 1 -Type DWord -Force
 
-        Write-OK "Windows Update active hours set (7am-11pm) — no surprise reboots"
+        Write-OK "Windows Update active hours set (7am-11pm) - no surprise reboots"
     } catch {
         Write-Warn "Could not configure Windows Update policy: $_"
         Write-Warn "You may want to set active hours manually in Windows Update settings."
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 10: Launch browser setup wizard
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Start-SetupWizard {
     Write-Step "Launching setup wizard..."
 
@@ -667,7 +663,7 @@ function Start-SetupWizard {
     <h1>Almost there!</h1>
     <p class="subtitle">
       ClawReady has installed and configured everything on your system.
-      Now let's set up your AI agent — it only takes 2 minutes.
+      Now let's set up your AI agent - it only takes 2 minutes.
     </p>
     <div class="info-box">
       You'll need:
@@ -699,7 +695,7 @@ function Start-SetupWizard {
     <p class="panel-title"><span class="step-num">2</span> Telegram Bot (Optional)</p>
     <p class="panel-desc">
       Connect a Telegram bot to message your AI agent from anywhere.
-      This step is optional — you can always do it later.
+      This step is optional - you can always do it later.
     </p>
     <div class="info-box">
       To create a bot:
@@ -933,9 +929,9 @@ function finishSetup() {
     Write-OK "Setup wizard completed"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Step 11: Start OpenClaw
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Start-OpenClaw {
     Write-Step "Starting OpenClaw for the first time..."
 
@@ -950,9 +946,9 @@ function Start-OpenClaw {
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Final success screen
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Show-Success {
     Write-Host ""
     Write-Divider
@@ -986,9 +982,9 @@ function Show-Success {
     Pause-ForUser "Press any key to exit..."
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Main execution
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Main {
     Write-Header
 
