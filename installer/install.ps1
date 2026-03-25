@@ -228,26 +228,14 @@ function Install-Ubuntu {
     }
 
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
+    Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
 
-    # Try winget first, then wsl --install
-    $wingetAvailable = $null -ne (Get-Command winget -ErrorAction SilentlyContinue)
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $installOutput = wsl --install -d Ubuntu-22.04 --no-launch 2>&1
+    $ErrorActionPreference = $prevPref
 
-    if ($wingetAvailable) {
-        Write-Host "  Using winget..." -ForegroundColor DarkGray
-        try {
-            winget install --id Canonical.Ubuntu.2204 --accept-source-agreements --accept-package-agreements --silent 2>&1 | Out-Null
-            Write-OK "$UBUNTU_DISTRO installed via winget"
-        } catch {
-            # Fall back to wsl --install
-            Write-Host "  winget install failed, trying wsl --install..." -ForegroundColor DarkGray
-            wsl --install -d Ubuntu-22.04 --no-launch 2>&1 | Out-Null
-            Write-OK "$UBUNTU_DISTRO installed via wsl"
-        }
-    } else {
-        Write-Host "  Using wsl --install..." -ForegroundColor DarkGray
-        wsl --install -d Ubuntu-22.04 --no-launch 2>&1 | Out-Null
-        Write-OK "$UBUNTU_DISTRO installed"
-    }
+    Write-OK "$UBUNTU_DISTRO install initiated"
 
     # Verify installation - retry up to 5 times with increasing delays
     $ubuntuInstalled = $false
