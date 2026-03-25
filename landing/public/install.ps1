@@ -202,6 +202,11 @@ function Enable-WSL2 {
     } catch {
         Write-Warn "Could not update WSL2 kernel automatically. Continuing..."
     }
+
+    # Wait for WSL to finish any internal upgrades before proceeding
+    Write-Step "Waiting for WSL2 to settle..."
+    Start-Sleep -Seconds 8
+    Write-OK "WSL2 ready"
 }
 
 # -----------------------------------------------------------------------------
@@ -210,8 +215,11 @@ function Enable-WSL2 {
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
-    # Check if Ubuntu is already installed
+    # Check if Ubuntu is already installed (suppress errors - WSL may still be settling)
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $installedDistros = wsl --list --quiet 2>&1
+    $ErrorActionPreference = $prevPref
     $ubuntuInstalled = $installedDistros | Where-Object { $_ -match "Ubuntu" }
 
     if ($ubuntuInstalled) {
