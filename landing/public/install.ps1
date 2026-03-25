@@ -665,7 +665,7 @@ function Start-SetupWizard {
     </p>
     <div class="info-box">
       You'll need:
-      <br>&#x2022; An Anthropic API key (get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>)
+      <br>&#x2022; An Anthropic API key (get one at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>)
       <br>&#x2022; A Telegram account (optional, for messaging your agent)
     </div>
     <button class="btn" onclick="nextPanel(1)">Let's go &rarr;</button>
@@ -676,7 +676,7 @@ function Start-SetupWizard {
     <p class="panel-title"><span class="step-num">1</span> Anthropic API Key</p>
     <p class="panel-desc">
       Your API key powers the AI. It starts with <code style="color:#60a5fa">sk-ant-</code>.
-      Get yours at <a href="https://console.anthropic.com/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
+      Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
     </p>
     <label for="api-key">API Key</label>
     <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
