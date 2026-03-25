@@ -249,13 +249,23 @@ function Install-Ubuntu {
         Write-OK "$UBUNTU_DISTRO installed"
     }
 
-    # Verify installation
-    Start-Sleep -Seconds 3
-    $installedDistros = wsl --list --quiet 2>&1
-    $ubuntuInstalled = $installedDistros | Where-Object { $_ -match "Ubuntu" }
+    # Verify installation - retry up to 5 times with increasing delays
+    $ubuntuInstalled = $false
+    for ($i = 1; $i -le 5; $i++) {
+        Write-Host "  Verifying installation (attempt $i/5)..." -ForegroundColor DarkGray
+        Start-Sleep -Seconds ($i * 5)
+        $prevPref = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $installedDistros = wsl --list --quiet 2>&1
+        $ErrorActionPreference = $prevPref
+        $ubuntuInstalled = $installedDistros | Where-Object { $_ -match "Ubuntu" }
+        if ($ubuntuInstalled) { break }
+    }
 
     if (-not $ubuntuInstalled) {
-        Write-Fail "Ubuntu installation could not be verified. Please install Ubuntu manually from the Microsoft Store and re-run this script."
+        Write-Fail "Ubuntu installation could not be verified after 5 attempts."
+        Write-Host "  Please install Ubuntu 22.04 manually from the Microsoft Store," -ForegroundColor Gray
+        Write-Host "  then re-run this script." -ForegroundColor Gray
         exit 1
     }
 
