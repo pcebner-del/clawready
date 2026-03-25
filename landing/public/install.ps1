@@ -215,12 +215,9 @@ function Enable-WSL2 {
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
-    # Check if Ubuntu is already installed (suppress errors - WSL may still be settling)
-    $prevPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $installedDistros = wsl --list --quiet 2>&1
-    $ErrorActionPreference = $prevPref
-    $ubuntuInstalled = $installedDistros | Where-Object { $_ -match "Ubuntu" }
+    # Check if Ubuntu is already installed
+    # NOTE: wsl --list outputs UTF-16LE which PowerShell 5 misreads - use AppxPackage instead
+    $ubuntuInstalled = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
 
     if ($ubuntuInstalled) {
         Write-OK "Ubuntu already installed"
@@ -237,21 +234,12 @@ function Install-Ubuntu {
 
     Write-OK "$UBUNTU_DISTRO install initiated"
 
-    # Verify installation - retry up to 5 times with increasing delays
-    $ubuntuInstalled = $false
-    for ($i = 1; $i -le 5; $i++) {
-        Write-Host "  Verifying installation (attempt $i/5)..." -ForegroundColor DarkGray
-        Start-Sleep -Seconds ($i * 5)
-        $prevPref = $ErrorActionPreference
-        $ErrorActionPreference = 'Continue'
-        $installedDistros = wsl --list --quiet 2>&1
-        $ErrorActionPreference = $prevPref
-        $ubuntuInstalled = $installedDistros | Where-Object { $_ -match "Ubuntu" }
-        if ($ubuntuInstalled) { break }
-    }
+    # Verify installation via AppxPackage (reliable on PS5, avoids UTF-16 wsl --list issue)
+    Start-Sleep -Seconds 5
+    $ubuntuVerified = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
 
-    if (-not $ubuntuInstalled) {
-        Write-Fail "Ubuntu installation could not be verified after 5 attempts."
+    if (-not $ubuntuVerified) {
+        Write-Fail "Ubuntu installation could not be verified."
         Write-Host "  Please install Ubuntu 22.04 manually from the Microsoft Store," -ForegroundColor Gray
         Write-Host "  then re-run this script." -ForegroundColor Gray
         exit 1
