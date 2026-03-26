@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 const included = [
   'ClawReady-install.ps1 installer script',
   'WSL2 auto-enable & Ubuntu setup',
@@ -14,6 +16,46 @@ const included = [
   'Telegram bot setup assistant',
   'Agent name & personality quick setup',
 ]
+
+function RestartCommand() {
+  const [copied, setCopied] = useState(false)
+  const cmd = 'wsl -d Ubuntu -e bash -c "sudo systemctl restart openclaw"'
+
+  const copy = () => {
+    navigator.clipboard.writeText(cmd).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="bg-[#050a14] border border-yellow-500/15 rounded-lg p-3 mb-4">
+      <p className="text-slate-500 text-xs mb-1 font-mono">PowerShell restart command:</p>
+      <div className="flex items-center gap-2">
+        <code className="text-yellow-300 font-mono text-xs break-all flex-1">
+          wsl -d Ubuntu -e bash -c &quot;sudo systemctl restart openclaw&quot;
+        </code>
+        <button
+          onClick={copy}
+          aria-label="Copy command"
+          title={copied ? 'Copied!' : 'Copy to clipboard'}
+          className="flex-shrink-0 text-slate-400 hover:text-yellow-300 transition-colors duration-150 p-1 rounded"
+        >
+          {copied ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function Pricing() {
   return (
@@ -180,12 +222,7 @@ export default function Pricing() {
                 <p className="text-slate-400 text-sm leading-relaxed mb-4">
                   The OpenClaw service may have stopped. Open PowerShell and run this command to restart it:
                 </p>
-                <div className="bg-[#050a14] border border-yellow-500/15 rounded-lg p-3 mb-4">
-                  <p className="text-slate-500 text-xs mb-1 font-mono">PowerShell restart command:</p>
-                  <code className="text-yellow-300 font-mono text-xs break-all">
-                    wsl -d Ubuntu -e bash -c &quot;sudo systemctl restart openclaw&quot;
-                  </code>
-                </div>
+                <RestartCommand />
                 <p className="text-slate-500 text-xs">
                   Loki (the chat widget in the bottom-right) can also walk you through troubleshooting step by step.
                 </p>
