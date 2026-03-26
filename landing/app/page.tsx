@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
+import AuthPaths from '@/components/AuthPaths'
 import PainSection from '@/components/PainSection'
 import FeaturesSection from '@/components/FeaturesSection'
 import HowItWorks from '@/components/HowItWorks'
@@ -12,6 +13,7 @@ export default function Home() {
     <main className="bg-[#050a14] min-h-screen">
       <Navbar />
       <Hero />
+      <AuthPaths />
       <PainSection />
       <HowItWorks />
       <FeaturesSection />

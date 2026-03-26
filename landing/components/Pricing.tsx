@@ -101,19 +101,59 @@ export default function Pricing() {
             {[
               {
                 q: 'Do I need to know Linux or command line?',
-                a: 'No. You only need to right-click PowerShell and run as Administrator. The script handles everything else.',
+                a: 'No. You only need to open PowerShell and paste one command. The script handles everything else.',
+              },
+              {
+                q: 'How do I open PowerShell?',
+                a: null,
+                custom: (
+                  <div className="text-slate-400 text-sm leading-relaxed space-y-2">
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Press the <span className="text-white font-medium">Windows key</span></li>
+                      <li>Type <span className="text-white font-medium">PowerShell</span></li>
+                      <li>Click <span className="text-white font-medium">Windows PowerShell</span> and press Enter</li>
+                      <li>Paste the install command when prompted</li>
+                    </ol>
+                    <div className="mt-3 bg-[#050a14] border border-blue-500/20 rounded-lg p-3">
+                      <p className="text-slate-500 text-xs mb-1">Paste this command:</p>
+                      <code className="text-blue-300 font-mono text-xs break-all">
+                        irm clawreadyapp.com/install.ps1 | iex
+                      </code>
+                    </div>
+                  </div>
+                ),
               },
               {
                 q: 'What Windows versions are supported?',
-                a: 'Windows 10 version 2004 (May 2020 Update) or newer, and all versions of Windows 11. WSL2 requires these minimum versions.',
+                a: null,
+                custom: (
+                  <div className="text-slate-400 text-sm leading-relaxed space-y-2">
+                    <p>Windows 10 version 2004 (May 2020 Update) or newer, and all versions of Windows 11.</p>
+                    <p>
+                      <span className="text-slate-300 font-medium">To check your version:</span> Press{' '}
+                      <span className="text-white">Windows key + R</span>, type{' '}
+                      <code className="bg-[#050a14] border border-blue-500/20 rounded px-1.5 py-0.5 text-blue-300 font-mono">winver</code>
+                      , press Enter. If you&apos;re on an older version, visit{' '}
+                      <span className="text-blue-400">Windows Update</span> to upgrade.
+                    </p>
+                  </div>
+                ),
               },
               {
-                q: 'What if something goes wrong?',
-                a: 'The installer checks each step before proceeding and tells you exactly what failed. It\'s idempotent — you can run it again safely.',
+                q: 'How much disk space do I need?',
+                a: 'ClawReady installs Ubuntu via WSL2, which requires 2–4 GB of disk space. We recommend having at least 5 GB free to be safe before running the installer.',
+              },
+              {
+                q: 'Do I need to download Claude Code separately?',
+                a: 'No — you do NOT need to download Claude Code separately. ClawReady handles everything, including Claude Code installation.',
+              },
+              {
+                q: 'What if something goes wrong during install?',
+                a: 'The installer checks each step before proceeding and tells you exactly what failed. It\'s idempotent — you can run it again safely. Loki (the chat widget below) can also help troubleshoot.',
               },
               {
                 q: 'Do I still need an Anthropic API key?',
-                a: 'Yes — OpenClaw uses the Claude API to power your AI agent. The setup wizard helps you enter your key, but you need to get one from console.anthropic.com first.',
+                a: 'Only if you don\'t have a Claude Pro or Max subscription. If you do, run "claude setup-token" during setup and use your existing account at no extra cost. If not, get an API key at console.anthropic.com — typical usage runs $5–20/month.',
               },
               {
                 q: 'Is this affiliated with Anthropic?',
@@ -122,9 +162,35 @@ export default function Pricing() {
             ].map((faq, i) => (
               <div key={i} className="border-b border-slate-800 pb-6">
                 <h4 className="text-white font-semibold mb-2">{faq.q}</h4>
-                <p className="text-slate-400 text-sm leading-relaxed">{faq.a}</p>
+                {faq.custom ? faq.custom : (
+                  <p className="text-slate-400 text-sm leading-relaxed">{faq.a}</p>
+                )}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Troubleshooting section */}
+        <div className="mt-16 max-w-2xl mx-auto">
+          <div className="bg-gradient-to-b from-[#0d1e3a] to-[#0a1628] rounded-2xl border border-yellow-500/20 p-6">
+            <div className="flex items-start gap-4">
+              <span className="text-2xl flex-shrink-0">⚠️</span>
+              <div className="min-w-0">
+                <h3 className="text-white font-bold text-lg mb-2">What if my agent stops responding?</h3>
+                <p className="text-slate-400 text-sm leading-relaxed mb-4">
+                  The OpenClaw service may have stopped. Open PowerShell and run this command to restart it:
+                </p>
+                <div className="bg-[#050a14] border border-yellow-500/15 rounded-lg p-3 mb-4">
+                  <p className="text-slate-500 text-xs mb-1 font-mono">PowerShell restart command:</p>
+                  <code className="text-yellow-300 font-mono text-xs break-all">
+                    wsl -d Ubuntu -e bash -c &quot;sudo systemctl restart openclaw&quot;
+                  </code>
+                </div>
+                <p className="text-slate-500 text-xs">
+                  Loki (the chat widget in the bottom-right) can also walk you through troubleshooting step by step.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

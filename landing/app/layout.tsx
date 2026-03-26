@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import LokiChat from '../components/LokiChat'
+import BackToTop from '../components/BackToTop'
 
 export const metadata: Metadata = {
   title: 'ClawReady — OpenClaw for Windows in One Click',
@@ -23,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="antialiased overflow-x-hidden">{children}<LokiChat /></body>
+      <body className="antialiased overflow-x-hidden">{children}<LokiChat /><BackToTop /></body>
     </html>
   )
 }
