@@ -102,6 +102,19 @@ export default function Testimonial() {
           ))}
         </div>
 
+        {/* Trustpilot CTA */}
+        <div className="text-center mb-14">
+          <a
+            href="https://www.trustpilot.com/review/clawreadyapp.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-green-400 transition-colors"
+          >
+            <svg className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Used ClawReady? Leave a review on Trustpilot →
+          </a>
+        </div>
+
         {/* Supporting stats */}
         <div className="grid sm:grid-cols-3 gap-6">
           {[
