@@ -20,14 +20,18 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            aria-label="Back to top"
+          >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13 2L3 14h8l-2 8 10-12h-8z" />
               </svg>
             </div>
             <span className="font-bold text-white text-lg tracking-tight">ClawReady</span>
-          </div>
+          </button>
 
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8">
