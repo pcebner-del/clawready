@@ -44,11 +44,14 @@ export default function SuccessPage() {
             <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold">2</span>
             Run it in PowerShell as Administrator
           </h2>
-          <div className="bg-[#050a14] rounded-xl p-4 font-mono text-sm">
-            <p className="text-slate-500 mb-1"># Right-click PowerShell &rarr; &quot;Run as Administrator&quot;, then:</p>
+          <div className="bg-[#050a14] rounded-xl p-4 font-mono text-sm space-y-1">
+            <p className="text-slate-500"># Right-click PowerShell &rarr; &quot;Run as Administrator&quot;, then paste this:</p>
             <p className="text-blue-300">Set-ExecutionPolicy Bypass -Scope Process -Force</p>
-            <p className="text-green-300">.\ClawReady-install.ps1</p>
+            <p className="text-green-300">cd "$HOME\Downloads"; .\ClawReady-install.ps1</p>
           </div>
+          <p className="text-slate-500 text-xs mt-3">
+            This navigates to your Downloads folder and runs the installer automatically.
+          </p>
         </div>
 
         <div className="bg-[#0a1628] border border-slate-700/50 rounded-2xl p-8 text-left">
