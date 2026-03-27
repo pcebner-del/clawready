@@ -215,17 +215,20 @@ function Enable-WSL2 {
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
-    # Check if Ubuntu is already installed
-    # NOTE: wsl --list outputs UTF-16LE which PowerShell 5 misreads - use AppxPackage instead
-    $ubuntuInstalled = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
+    # Ground-truth check: can we actually run inside the distro?
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $testResult = wsl -d Ubuntu-22.04 -- echo "ok" 2>&1
+    $distroReady = ($LASTEXITCODE -eq 0 -and ($testResult -join '') -match 'ok')
+    $ErrorActionPreference = $prevPref
 
-    if ($ubuntuInstalled) {
-        Write-OK "Ubuntu already installed"
+    if ($distroReady) {
+        Write-OK "Ubuntu already installed and ready"
         return
     }
 
+    # Distro not accessible — install or re-register it
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
-    Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
 
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
@@ -234,12 +237,25 @@ function Install-Ubuntu {
 
     Write-OK "$UBUNTU_DISTRO install initiated"
 
-    # Verify installation via AppxPackage (reliable on PS5, avoids UTF-16 wsl --list issue)
-    Start-Sleep -Seconds 5
-    $ubuntuVerified = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
+    # Wait for distro to become accessible
+    Write-Step "Waiting for Ubuntu to be ready..."
+    $maxWait = 60
+    $waited = 0
+    $ready = $false
+    while ($waited -lt $maxWait) {
+        Start-Sleep -Seconds 3
+        $waited += 3
+        $ErrorActionPreference = 'Continue'
+        $check = wsl -d Ubuntu-22.04 -- echo "ok" 2>&1
+        $ErrorActionPreference = 'Stop'
+        if ($LASTEXITCODE -eq 0 -and ($check -join '') -match 'ok') {
+            $ready = $true
+            break
+        }
+    }
 
-    if (-not $ubuntuVerified) {
-        Write-Fail "Ubuntu installation could not be verified."
+    if (-not $ready) {
+        Write-Fail "Ubuntu installation could not be verified after ${maxWait}s."
         Write-Host "  Please install Ubuntu 22.04 manually from the Microsoft Store," -ForegroundColor Gray
         Write-Host "  then re-run this script." -ForegroundColor Gray
         exit 1
