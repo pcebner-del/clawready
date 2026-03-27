@@ -275,9 +275,7 @@ appendWindowsPath = true
     $escapedContent = $wslConfContent -replace '"', '\"'
     $cmd = "sudo tee /etc/wsl.conf > /dev/null << 'WSLEOF'" + "`n" + $wslConfContent + "`nWSLEOF"
 
-    wsl -d Ubuntu-22.04 -- bash -c "echo '$wslConfContent' | sudo tee /etc/wsl.conf > /dev/null" 2>&1 | Out-Null
-
-    # More reliable approach: write via heredoc
+    # Run as root directly (-u root) to avoid sudo password prompt
     $scriptBlock = @'
 cat > /tmp/wsl.conf.tmp << 'EOF'
 [boot]
@@ -295,11 +293,11 @@ generateResolvConf = true
 enabled = true
 appendWindowsPath = true
 EOF
-sudo cp /tmp/wsl.conf.tmp /etc/wsl.conf
+cp /tmp/wsl.conf.tmp /etc/wsl.conf
 echo "done"
 '@
 
-    $result = wsl -d Ubuntu-22.04 -- bash -c $scriptBlock 2>&1
+    $result = wsl -d Ubuntu-22.04 -u root -- bash -c $scriptBlock 2>&1
     Write-OK "WSL2 systemd configured in /etc/wsl.conf"
 
     # Restart WSL to apply systemd
