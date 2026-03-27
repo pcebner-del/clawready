@@ -58,9 +58,9 @@ export default function SuccessPage() {
           </h2>
 
           <ol className="text-slate-400 text-sm space-y-2 mb-5 list-none">
-            <li className="flex gap-2"><span className="text-blue-400 font-bold">a.</span> Press the <kbd className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded text-xs font-mono">Windows</kbd> key, type <strong className="text-white">PowerShell</strong></li>
-            <li className="flex gap-2"><span className="text-blue-400 font-bold">b.</span> Right-click <strong className="text-white">Windows PowerShell</strong> → click <strong className="text-white">&ldquo;Run as Administrator&rdquo;</strong></li>
-            <li className="flex gap-2"><span className="text-blue-400 font-bold">c.</span> Copy the command below, paste it into PowerShell, and hit <kbd className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded text-xs font-mono">Enter</kbd></li>
+            <li className="flex gap-2"><span className="text-blue-400 font-bold">a.</span> <strong className="text-white">Right-click the Start button</strong> (Windows logo, bottom-left corner)</li>
+            <li className="flex gap-2"><span className="text-blue-400 font-bold">b.</span> Click <strong className="text-white">&ldquo;Windows PowerShell (Admin)&rdquo;</strong> or <strong className="text-white">&ldquo;Terminal (Admin)&rdquo;</strong></li>
+            <li className="flex gap-2"><span className="text-blue-400 font-bold">c.</span> Copy the command below, paste it into the window, and hit <kbd className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded text-xs font-mono">Enter</kbd></li>
           </ol>
 
           {/* Command + copy button */}
