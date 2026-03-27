@@ -39,7 +39,7 @@ export default function SuccessPage() {
           </h2>
           <p className="text-slate-400 text-sm mb-5">Click the button below. The file will land in your Downloads folder.</p>
           <a
-            href="/install.ps1"
+            href="/ClawReady-install.ps1"
             download="ClawReady-install.ps1"
             className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-4 rounded-xl transition-colors w-full justify-center"
           >
