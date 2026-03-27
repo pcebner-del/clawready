@@ -215,10 +215,10 @@ function Enable-WSL2 {
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
-    # Ground-truth check: can we actually run inside the distro?
+    # Ground-truth check: can we actually run inside the distro as root?
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    $testResult = wsl -d Ubuntu-22.04 -- echo "ok" 2>&1
+    $testResult = wsl -d Ubuntu-22.04 -u root -- echo "ok" 2>&1
     $distroReady = ($LASTEXITCODE -eq 0 -and ($testResult -join '') -match 'ok')
     $ErrorActionPreference = $prevPref
 
@@ -227,7 +227,7 @@ function Install-Ubuntu {
         return
     }
 
-    # Distro not accessible — install or re-register it
+    # Distro not accessible — install it
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
 
     $prevPref = $ErrorActionPreference
@@ -237,22 +237,31 @@ function Install-Ubuntu {
 
     Write-OK "$UBUNTU_DISTRO install initiated"
 
-    # Wait for distro to become accessible
-    Write-Step "Waiting for Ubuntu to be ready..."
-    $maxWait = 60
+    # Initialize distro as root (non-interactive, no user creation prompt)
+    Write-Step "Initializing Ubuntu (this may take a minute)..."
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+
+    # Try ubuntu2204.exe install --root first (cleanest non-interactive init)
+    $exe = Get-Command "ubuntu2204.exe" -ErrorAction SilentlyContinue
+    if ($exe) {
+        Start-Process -FilePath "ubuntu2204.exe" -ArgumentList "install","--root" -Wait -NoNewWindow 2>&1 | Out-Null
+    }
+
+    # Wait for distro to become accessible as root
+    $maxWait = 120
     $waited = 0
     $ready = $false
     while ($waited -lt $maxWait) {
         Start-Sleep -Seconds 3
         $waited += 3
-        $ErrorActionPreference = 'Continue'
-        $check = wsl -d Ubuntu-22.04 -- echo "ok" 2>&1
-        $ErrorActionPreference = 'Stop'
+        $check = wsl -d Ubuntu-22.04 -u root -- echo "ok" 2>&1
         if ($LASTEXITCODE -eq 0 -and ($check -join '') -match 'ok') {
             $ready = $true
             break
         }
     }
+    $ErrorActionPreference = $prevPref
 
     if (-not $ready) {
         Write-Fail "Ubuntu installation could not be verified after ${maxWait}s."
@@ -394,10 +403,10 @@ echo "CLAWREADY_SUCCESS"
     $ErrorActionPreference = 'Continue'
 
     # Decode base64 in WSL and save to /tmp — guaranteed LF endings
-    wsl -d Ubuntu-22.04 -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
+    wsl -d Ubuntu-22.04 -u root -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
 
     # Execute the install script
-    $output = wsl -d Ubuntu-22.04 -- bash /tmp/clawready-install.sh 2>&1
+    $output = wsl -d Ubuntu-22.04 -u root -- bash /tmp/clawready-install.sh 2>&1
     $ErrorActionPreference = $prevPref
 
     # Print output
