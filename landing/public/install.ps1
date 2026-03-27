@@ -951,15 +951,11 @@ function finishSetup() {
 
             $ocConfig = "{`n  env: { ANTHROPIC_API_KEY: `"$apiKey`" },`n$telegramBlock`n  agents: { defaults: { model: { primary: `"anthropic/claude-sonnet-4-6`" } } },`n}"
 
-            # Write to Windows temp file, then copy into WSL as root
-            $tempConfig = Join-Path $env:TEMP "oc-config.json"
-            $ocConfig | Out-File -FilePath $tempConfig -Encoding UTF8 -NoNewline
+            # Write config directly into WSL via stdin (avoids path conversion issues)
+            $configBytes = [System.Text.Encoding]::UTF8.GetBytes($ocConfig)
+            $configB64   = [Convert]::ToBase64String($configBytes)
 
-            # Convert Windows path to WSL /mnt path
-            $wslPath = ($tempConfig -replace '^([A-Za-z]):\\', { '/mnt/' + $args[0].Groups[1].Value.ToLower() + '/' }) -replace '\\', '/'
-
-            wsl -d Ubuntu-22.04 -u root -- bash -c "mkdir -p /root/.openclaw && cp '$wslPath' /root/.openclaw/openclaw.json"
-            Remove-Item $tempConfig -ErrorAction SilentlyContinue
+            wsl -d Ubuntu-22.04 -u root -- bash -c "mkdir -p /root/.openclaw && echo '$configB64' | base64 -d > /root/.openclaw/openclaw.json"
 
             Write-OK "OpenClaw configuration written"
         }
