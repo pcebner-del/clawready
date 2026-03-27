@@ -908,29 +908,51 @@ function finishSetup() {
         $configLines = Get-Content "$env:TEMP\clawready-config.json" -ErrorAction SilentlyContinue
         Remove-Item "$env:TEMP\clawready-config.json" -ErrorAction SilentlyContinue
 
-        # Parse and apply config via openclaw CLI inside WSL2
+        # Parse wizard output
+        $apiKey   = ""
+        $tgToken  = ""
+        $tgChatId = ""
+        $agentName = "Loki"
+
         foreach ($line in $configLines) {
             try {
                 $json = $line | ConvertFrom-Json
-                if ($json.anthropic_api_key) {
-                    $key = $json.anthropic_api_key
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set anthropic_api_key '$key'" 2>&1 | Out-Null
-                }
-                if ($json.telegram_token) {
-                    $token = $json.telegram_token
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_token '$token'" 2>&1 | Out-Null
-                }
-                if ($json.telegram_chat_id) {
-                    $chatId = $json.telegram_chat_id
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_chat_id '$chatId'" 2>&1 | Out-Null
-                }
-                if ($json.agent_name) {
-                    $name = $json.agent_name
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_name '$name'" 2>&1 | Out-Null
-                }
-            } catch {
-                # Ignore JSON parse errors
+                if ($json.anthropic_api_key) { $apiKey   = $json.anthropic_api_key }
+                if ($json.telegram_token)    { $tgToken  = $json.telegram_token }
+                if ($json.telegram_chat_id)  { $tgChatId = $json.telegram_chat_id }
+                if ($json.agent_name)        { $agentName = $json.agent_name }
+            } catch {}
+        }
+
+        if ($apiKey) {
+            # Build openclaw.json config (JSON5 format OpenClaw expects)
+            $telegramBlock = ""
+            if ($tgToken -and $tgChatId) {
+                $telegramBlock = @"
+  channels: {
+    telegram: {
+      enabled: true,
+      botToken: "$tgToken",
+      dmPolicy: "allowlist",
+      allowFrom: ["tg:$tgChatId"],
+    },
+  },
+"@
             }
+
+            $ocConfig = "{`n  env: { ANTHROPIC_API_KEY: `"$apiKey`" },`n$telegramBlock`n  agents: { defaults: { model: { primary: `"anthropic/claude-sonnet-4-6`" } } },`n}"
+
+            # Write to Windows temp file, then copy into WSL as root
+            $tempConfig = Join-Path $env:TEMP "oc-config.json"
+            $ocConfig | Out-File -FilePath $tempConfig -Encoding UTF8 -NoNewline
+
+            # Convert Windows path to WSL /mnt path
+            $wslPath = ($tempConfig -replace '^([A-Za-z]):\\', { '/mnt/' + $args[0].Groups[1].Value.ToLower() + '/' }) -replace '\\', '/'
+
+            wsl -d Ubuntu-22.04 -u root -- bash -c "mkdir -p /root/.openclaw && cp '$wslPath' /root/.openclaw/openclaw.json"
+            Remove-Item $tempConfig -ErrorAction SilentlyContinue
+
+            Write-OK "OpenClaw configuration written"
         }
     }
 
@@ -948,8 +970,8 @@ function Start-OpenClaw {
     Write-Step "Starting OpenClaw for the first time..."
 
     try {
-        # Start OpenClaw in background inside WSL2
-        wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
+        # Start OpenClaw in background inside WSL2 (as root where it's installed)
+        wsl -d Ubuntu-22.04 -u root -- bash -c "source /root/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
         Start-Sleep -Seconds 3
         Write-OK "OpenClaw started in background"
     } catch {
