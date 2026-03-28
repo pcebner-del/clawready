@@ -238,14 +238,27 @@ function Enable-WSL2 {
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
-    # Check if Ubuntu is already installed
-    # NOTE: wsl --list outputs UTF-16LE which PowerShell 5 misreads - use AppxPackage instead
-    $ubuntuInstalled = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
+    # Ground-truth check: can WSL actually run a distro? AppxPackage presence alone is not enough
+    # (the app can be installed but never initialized as a WSL distro)
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $candidates = @("Ubuntu-22.04", "Ubuntu-22.04 LTS", "Ubuntu", "Ubuntu-20.04")
+    $distroReady = $false
+    foreach ($name in $candidates) {
+        $test = wsl -d $name -- echo "ok" 2>&1
+        if ($LASTEXITCODE -eq 0 -and ($test -join '') -match 'ok') {
+            $distroReady = $true
+            break
+        }
+    }
+    $ErrorActionPreference = $prevPref
 
-    if ($ubuntuInstalled) {
-        Write-OK "Ubuntu already installed"
+    if ($distroReady) {
+        Write-OK "Ubuntu already installed and ready"
         return
     }
+
+    Write-Step "Ubuntu not initialized in WSL — installing now..."
 
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
     Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
