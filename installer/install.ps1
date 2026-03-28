@@ -840,6 +840,10 @@ function saveApiKey() {
 function saveTelegram() {
   const token = document.getElementById('tg-token').value.trim();
   const chatId = document.getElementById('tg-chat').value.trim();
+  if ((token && !chatId) || (!token && chatId)) {
+    alert('Please fill in both the bot token and your chat ID, or leave both blank to skip.');
+    return;
+  }
   if (token && chatId) {
     fetch('/save-config', {
       method: 'POST',
@@ -857,14 +861,13 @@ function finishSetup() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ agent_name: name, agent_persona: persona, setup_complete: true })
-  }).catch(() => {});
+  })
+  .catch(() => {})
+  .finally(() => fetch('/setup-complete').catch(() => {}));
   document.getElementById('panel-4').classList.remove('active');
   document.getElementById('dot-4').classList.remove('active');
   document.getElementById('dot-4').classList.add('done');
   document.getElementById('panel-5').classList.add('active');
-
-  // Signal the PowerShell script that setup is done
-  fetch('/setup-complete').catch(() => {});
 }
 </script>
 </body>
@@ -957,6 +960,8 @@ function finishSetup() {
         $elapsed += 2
     }
 
+    Start-Sleep -Milliseconds 300
+
     # Apply config if collected
     if (Test-Path "$env:TEMP\clawready-config.json") {
         $configLines = Get-Content "$env:TEMP\clawready-config.json" -ErrorAction SilentlyContinue
@@ -966,28 +971,32 @@ function finishSetup() {
         foreach ($line in $configLines) {
             try {
                 $json = $line | ConvertFrom-Json
-                if ($json.anthropic_api_key) {
+                if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set anthropic_api_key '$key'" 2>&1 | Out-Null
                 }
-                if ($json.setup_token) {
+                if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
                     # Install Claude Code CLI in WSL2 if not present
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
                     # Feed the token to openclaw
                     $token = $json.setup_token
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
                 }
-                if ($json.telegram_token) {
+                if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_token '$token'" 2>&1 | Out-Null
                 }
-                if ($json.telegram_chat_id) {
+                if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
                     $chatId = $json.telegram_chat_id
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_chat_id '$chatId'" 2>&1 | Out-Null
                 }
-                if ($json.agent_name) {
+                if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
                     $name = $json.agent_name
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_name '$name'" 2>&1 | Out-Null
+                }
+                if ($json.PSObject.Properties['agent_persona'] -and $json.agent_persona) {
+                    $persona = $json.agent_persona
+                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_persona '$persona'" 2>&1 | Out-Null
                 }
             } catch {
                 # Ignore JSON parse errors
