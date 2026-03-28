@@ -7,10 +7,10 @@ export default function AuthPaths() {
         <div className="text-center mb-10">
           <p className="text-blue-400 font-semibold uppercase tracking-wider text-sm mb-3">How Claude access works</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-            Pick your path — either one works
+            Already pay for Claude? No extra cost.
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
-            OpenClaw runs on Claude AI. You need one of these two options — pick whichever fits you.
+            If you already subscribe to Claude Pro or Max, ClawReady connects to your existing account. No API fees. No extra bills.
           </p>
         </div>
 

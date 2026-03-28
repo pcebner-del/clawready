@@ -13,6 +13,7 @@ const included = [
   'Windows Update hardening',
   'Browser-based setup wizard',
   'Anthropic API key configuration',
+  'Claude Pro/Max subscription support (no API key needed)',
   'Telegram bot setup assistant',
   'Agent name & personality quick setup',
 ]
