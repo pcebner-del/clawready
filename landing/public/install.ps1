@@ -736,17 +736,14 @@ function Start-SetupWizard {
         Already paying for Claude Pro or Max? Use your existing subscription &mdash; no extra API fees.
       </div>
       <p class="panel-desc">
-        Easiest: run this in the <strong style="color:#e2e8f0">same PowerShell window</strong> you used to install:<br><br>
-        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;">wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; claude setup-token"</code><br><br>
-        Or open Ubuntu from the Start menu and just run: <code style="color:#60a5fa">claude setup-token</code><br><br>
-        If prompted, log in to Claude in your browser, then copy the token and paste it below.<br><br>
+        Open a <strong style="color:#e2e8f0">new PowerShell window</strong> (Start &rarr; search PowerShell &rarr; Run as Administrator), then paste this command:<br><br>
+        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
+        It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
         <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
       </p>
       <label for="setup-token">Setup Token</label>
       <input type="password" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
-      <div class="info-box">
-        First time? Claude Code CLI will be installed automatically.
-      </div>
     </div>
 
     <button class="btn" onclick="saveApiKey()">Continue &rarr;</button>
