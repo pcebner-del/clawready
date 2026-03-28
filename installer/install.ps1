@@ -665,26 +665,54 @@ function Start-SetupWizard {
     </p>
     <div class="info-box">
       You'll need:
-      <br>&#x2022; An Anthropic API key (get one at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>)
+      <br>&#x2022; An Anthropic API key <strong>OR</strong> a Claude Pro/Max subscription
       <br>&#x2022; A Telegram account (optional, for messaging your agent)
     </div>
     <button class="btn" onclick="nextPanel(1)">Let's go &rarr;</button>
   </div>
 
-  <!-- Panel 2: API Key -->
+  <!-- Panel 2: Anthropic Auth -->
   <div class="panel" id="panel-2">
-    <p class="panel-title"><span class="step-num">1</span> Anthropic API Key</p>
-    <p class="panel-desc">
-      Your API key powers the AI. It starts with <code style="color:#60a5fa">sk-ant-</code>.
-      Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
-    </p>
-    <label for="api-key">API Key</label>
-    <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
-    <div class="info-box">
-      Your key is stored locally in OpenClaw's config on your machine.
-      It is never sent to ClawReady servers.
+    <p class="panel-title"><span class="step-num">1</span> Connect to Anthropic</p>
+    <!-- Auth mode tabs -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">
+      <button class="btn" id="tab-apikey" style="flex:1;background:#2563eb;color:white;border:none;" onclick="switchAuthTab('apikey')">API Key</button>
+      <button class="btn" id="tab-subscription" style="flex:1;background:transparent;border:1px solid #334155;color:#94a3b8;" onclick="switchAuthTab('subscription')">Claude Subscription</button>
     </div>
-    <button class="btn" onclick="saveApiKey()">Save API key &rarr;</button>
+
+    <!-- Mode A: API Key -->
+    <div id="auth-apikey">
+      <p class="panel-desc">
+        Your API key powers the AI. It starts with <code style="color:#60a5fa">sk-ant-</code>.
+        Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
+      </p>
+      <label for="api-key">API Key</label>
+      <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
+      <div class="info-box">
+        Your key is stored locally in OpenClaw's config on your machine.
+        It is never sent to ClawReady servers.
+      </div>
+    </div>
+
+    <!-- Mode B: Claude Subscription -->
+    <div id="auth-subscription" style="display:none;">
+      <div class="info-box">
+        Already paying for Claude Pro or Max? Use your existing subscription &mdash; no extra API fees.
+      </div>
+      <p class="panel-desc">
+        1. Open WSL2 (search &ldquo;Ubuntu&rdquo; in Start menu, or open Terminal &rarr; Ubuntu)<br>
+        2. Run: <code style="color:#60a5fa">claude setup-token</code><br>
+        3. If prompted, log in to Claude in your browser<br>
+        4. Copy the token it outputs and paste it below
+      </p>
+      <label for="setup-token">Setup Token</label>
+      <input type="password" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
+      <div class="info-box">
+        First time? Claude Code CLI will be installed automatically.
+      </div>
+    </div>
+
+    <button class="btn" onclick="saveApiKey()">Continue &rarr;</button>
     <button class="btn btn-secondary" onclick="nextPanel(2)">Skip for now</button>
   </div>
 
@@ -741,6 +769,30 @@ function Start-SetupWizard {
 
 <script>
 let currentPanel = 1;
+let authTab = 'apikey';
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  if (tab === 'apikey') {
+    document.getElementById('auth-apikey').style.display = '';
+    document.getElementById('auth-subscription').style.display = 'none';
+    document.getElementById('tab-apikey').style.background = '#2563eb';
+    document.getElementById('tab-apikey').style.color = 'white';
+    document.getElementById('tab-apikey').style.border = 'none';
+    document.getElementById('tab-subscription').style.background = 'transparent';
+    document.getElementById('tab-subscription').style.color = '#94a3b8';
+    document.getElementById('tab-subscription').style.border = '1px solid #334155';
+  } else {
+    document.getElementById('auth-apikey').style.display = 'none';
+    document.getElementById('auth-subscription').style.display = '';
+    document.getElementById('tab-apikey').style.background = 'transparent';
+    document.getElementById('tab-apikey').style.color = '#94a3b8';
+    document.getElementById('tab-apikey').style.border = '1px solid #334155';
+    document.getElementById('tab-subscription').style.background = '#2563eb';
+    document.getElementById('tab-subscription').style.color = 'white';
+    document.getElementById('tab-subscription').style.border = 'none';
+  }
+}
 
 function nextPanel(from) {
   document.getElementById('panel-' + from).classList.remove('active');
@@ -754,17 +806,32 @@ function nextPanel(from) {
 }
 
 function saveApiKey() {
-  const key = document.getElementById('api-key').value.trim();
-  if (key && !key.startsWith('sk-ant-')) {
-    alert('That does not look like an Anthropic API key. It should start with sk-ant-');
-    return;
-  }
-  if (key) {
-    fetch('/save-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ anthropic_api_key: key })
-    }).catch(() => {});
+  if (authTab === 'apikey') {
+    const key = document.getElementById('api-key').value.trim();
+    if (key && !key.startsWith('sk-ant-')) {
+      alert('That does not look like an Anthropic API key. It should start with sk-ant-');
+      return;
+    }
+    if (key) {
+      fetch('/save-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anthropic_api_key: key })
+      }).catch(() => {});
+    }
+  } else {
+    const token = document.getElementById('setup-token').value.trim();
+    if (token && !token.startsWith('sk-ant-oat-')) {
+      alert('That does not look like a valid setup token. It should start with sk-ant-oat-');
+      return;
+    }
+    if (token) {
+      fetch('/save-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setup_token: token })
+      }).catch(() => {});
+    }
   }
   nextPanel(2);
 }
@@ -901,6 +968,13 @@ function finishSetup() {
                 if ($json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
                     wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set anthropic_api_key '$key'" 2>&1 | Out-Null
+                }
+                if ($json.setup_token) {
+                    # Install Claude Code CLI in WSL2 if not present
+                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
+                    # Feed the token to openclaw
+                    $token = $json.setup_token
+                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
                 }
                 if ($json.telegram_token) {
                     $token = $json.telegram_token
