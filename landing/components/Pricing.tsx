@@ -196,7 +196,7 @@ export default function Pricing() {
               },
               {
                 q: 'Do I still need an Anthropic API key?',
-                a: 'Only if you don\'t have a Claude Pro or Max subscription. If you do, run "claude setup-token" during setup and use your existing account at no extra cost. If not, get an API key at console.anthropic.com — typical usage runs $5–20/month.',
+                a: 'Not if you already pay for Claude Pro or Max. The ClawReady setup wizard gives you two options: (A) paste your API key, or (B) use your Claude subscription. For option B, the wizard walks you through it step by step — you\'ll open Ubuntu, run "claude setup-token", copy the token it gives you, and paste it into the wizard. That\'s it. No API key, no extra fees. If you don\'t have a Claude subscription, grab an API key at console.anthropic.com — typical usage runs $5–20/month.',
               },
               {
                 q: 'Is this affiliated with Anthropic?',
