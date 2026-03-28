@@ -700,10 +700,11 @@ function Start-SetupWizard {
         Already paying for Claude Pro or Max? Use your existing subscription &mdash; no extra API fees.
       </div>
       <p class="panel-desc">
-        1. Open WSL2 (search &ldquo;Ubuntu&rdquo; in Start menu, or open Terminal &rarr; Ubuntu)<br>
-        2. Run: <code style="color:#60a5fa">claude setup-token</code><br>
-        3. If prompted, log in to Claude in your browser<br>
-        4. Copy the token it outputs and paste it below
+        Easiest: run this in the <strong style="color:#e2e8f0">same PowerShell window</strong> you used to install:<br><br>
+        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;">wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; claude setup-token"</code><br><br>
+        Or open Ubuntu from the Start menu and just run: <code style="color:#60a5fa">claude setup-token</code><br><br>
+        If prompted, log in to Claude in your browser, then copy the token and paste it below.<br><br>
+        <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
       </p>
       <label for="setup-token">Setup Token</label>
       <input type="password" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
