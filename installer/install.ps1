@@ -136,6 +136,29 @@ function Assert-WindowsVersion {
 }
 
 # -----------------------------------------------------------------------------
+# Detect actual WSL Ubuntu distro name
+# -----------------------------------------------------------------------------
+function Resolve-DistroName {
+    Write-Step "Detecting WSL2 Ubuntu distro name..."
+    $candidates = @("Ubuntu-22.04", "Ubuntu-22.04 LTS", "Ubuntu", "Ubuntu-20.04", "Ubuntu-18.04")
+    foreach ($name in $candidates) {
+        $prevPref = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $test = wsl -d $name -- echo "ok" 2>&1
+        $exitCode = $LASTEXITCODE
+        $ErrorActionPreference = $prevPref
+        if ($exitCode -eq 0 -and ($test -join '') -match 'ok') {
+            $script:UBUNTU_DISTRO = $name
+            Write-OK "Using WSL distro: $name"
+            return
+        }
+    }
+    Write-Fail "Could not find a running Ubuntu WSL2 distro."
+    Write-Host "  Please install Ubuntu from the Microsoft Store and re-run this installer." -ForegroundColor Gray
+    exit 1
+}
+
+# -----------------------------------------------------------------------------
 # Step 3: Enable WSL2 and Virtual Machine Platform
 # -----------------------------------------------------------------------------
 function Enable-WSL2 {
@@ -229,7 +252,7 @@ function Install-Ubuntu {
 
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    $installOutput = wsl --install -d Ubuntu-22.04 --no-launch 2>&1
+    $installOutput = wsl --install -d $UBUNTU_DISTRO --no-launch 2>&1
     $ErrorActionPreference = $prevPref
 
     Write-OK "$UBUNTU_DISTRO install initiated"
@@ -275,7 +298,7 @@ appendWindowsPath = true
     $escapedContent = $wslConfContent -replace '"', '\"'
     $cmd = "sudo tee /etc/wsl.conf > /dev/null << 'WSLEOF'" + "`n" + $wslConfContent + "`nWSLEOF"
 
-    wsl -d Ubuntu-22.04 -- bash -c "echo '$wslConfContent' | sudo tee /etc/wsl.conf > /dev/null" 2>&1 | Out-Null
+    wsl -d $UBUNTU_DISTRO -- bash -c "echo '$wslConfContent' | sudo tee /etc/wsl.conf > /dev/null" 2>&1 | Out-Null
 
     # More reliable approach: write via heredoc
     $scriptBlock = @'
@@ -299,7 +322,7 @@ sudo cp /tmp/wsl.conf.tmp /etc/wsl.conf
 echo "done"
 '@
 
-    $result = wsl -d Ubuntu-22.04 -- bash -c $scriptBlock 2>&1
+    $result = wsl -d $UBUNTU_DISTRO -- bash -c $scriptBlock 2>&1
     Write-OK "WSL2 systemd configured in /etc/wsl.conf"
 
     # Restart WSL to apply systemd
@@ -380,10 +403,10 @@ echo "CLAWREADY_SUCCESS"
     $ErrorActionPreference = 'Continue'
 
     # Decode base64 in WSL and save to /tmp — guaranteed LF endings
-    wsl -d Ubuntu-22.04 -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
+    wsl -d $UBUNTU_DISTRO -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
 
     # Execute the install script
-    $output = wsl -d Ubuntu-22.04 -- bash /tmp/clawready-install.sh 2>&1
+    $output = wsl -d $UBUNTU_DISTRO -- bash /tmp/clawready-install.sh 2>&1
     $ErrorActionPreference = $prevPref
 
     # Print output
@@ -413,7 +436,7 @@ function Set-BootTask {
 
     # WSL command to start OpenClaw via systemd
     $wslCommand = "C:\Windows\System32\wsl.exe"
-    $wslArgs    = '-d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw gateway start" &'
+    $wslArgs    = "-d $UBUNTU_DISTRO -- bash -c `"source ~/.nvm/nvm.sh && openclaw gateway start`" &"
 
     $action  = New-ScheduledTaskAction -Execute $wslCommand -Argument $wslArgs
     $trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -701,7 +724,7 @@ function Start-SetupWizard {
       </div>
       <p class="panel-desc">
         Easiest: run this in the <strong style="color:#e2e8f0">same PowerShell window</strong> you used to install:<br><br>
-        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;">wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; claude setup-token"</code><br><br>
+        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;">wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; claude setup-token"</code><br><br>
         Or open Ubuntu from the Start menu and just run: <code style="color:#60a5fa">claude setup-token</code><br><br>
         If prompted, log in to Claude in your browser, then copy the token and paste it below.<br><br>
         <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
@@ -973,30 +996,30 @@ function finishSetup() {
                 $json = $line | ConvertFrom-Json
                 if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set anthropic_api_key '$key'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set anthropic_api_key '$key'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
                     # Install Claude Code CLI in WSL2 if not present
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
                     # Feed the token to openclaw
                     $token = $json.setup_token
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_token '$token'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_token '$token'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
                     $chatId = $json.telegram_chat_id
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_chat_id '$chatId'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_chat_id '$chatId'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
                     $name = $json.agent_name
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_name '$name'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_name '$name'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_persona'] -and $json.agent_persona) {
                     $persona = $json.agent_persona
-                    wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_persona '$persona'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_persona '$persona'" 2>&1 | Out-Null
                 }
             } catch {
                 # Ignore JSON parse errors
@@ -1019,7 +1042,7 @@ function Start-OpenClaw {
 
     try {
         # Start OpenClaw in background inside WSL2
-        wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
+        wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
         Start-Sleep -Seconds 3
         Write-OK "OpenClaw started in background"
     } catch {
@@ -1055,7 +1078,7 @@ function Show-Success {
     Write-Host "    2. It will auto-start on every Windows login" -ForegroundColor Gray
     Write-Host "    3. Message it via Telegram (if configured)" -ForegroundColor Gray
     Write-Host "    4. To restart manually: " -NoNewline -ForegroundColor Gray
-    Write-Host "wsl -d Ubuntu-22.04 -- openclaw gateway start" -ForegroundColor Blue
+    Write-Host "wsl -d $UBUNTU_DISTRO -- openclaw gateway start" -ForegroundColor Blue
     Write-Host ""
     Write-Host "  Thank you for using ClawReady!" -ForegroundColor Blue
     Write-Host ""
@@ -1093,6 +1116,7 @@ function Main {
     Enable-WSL2
     Install-Ubuntu
     Set-WSLSystemd
+    Resolve-DistroName
     Install-NodeAndOpenClaw
     Set-BootTask
     Set-PowerSettings
