@@ -740,6 +740,7 @@ function Start-SetupWizard {
         <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
         <button onclick="navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
         It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
+        <span style="color:#fbbf24;font-size:0.85rem;">&#9888; If your browser doesn&apos;t open automatically, press <strong>c</strong> in the terminal to copy the login URL, then paste it in your browser.</span><br><br>
         <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
       </p>
       <label for="setup-token">Setup Token</label>
