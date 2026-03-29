@@ -723,7 +723,7 @@ function Start-SetupWizard {
         Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
       </p>
       <label for="api-key">API Key</label>
-      <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
+      <input type="text" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
       <div class="info-box">
         Your key is stored locally in OpenClaw's config on your machine.
         It is never sent to ClawReady servers.
@@ -743,7 +743,7 @@ function Start-SetupWizard {
         <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
       </p>
       <label for="setup-token">Setup Token</label>
-      <input type="password" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
+      <input type="text" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
     </div>
 
     <button class="btn" onclick="saveApiKey()">Continue &rarr;</button>
@@ -1006,30 +1006,33 @@ function finishSetup() {
                 $json = $line | ConvertFrom-Json
                 if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set anthropic_api_key '$key'" 2>&1 | Out-Null
+                    # Use openclaw onboard --non-interactive to store API key in auth-profiles.json
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
                     # Install Claude Code CLI in WSL2 if not present
                     wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
-                    # Feed the token to openclaw
+                    # Feed the token to openclaw auth-profiles.json
                     $token = $json.setup_token
                     wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_token '$token'" 2>&1 | Out-Null
+                    # Set bot token and enable Telegram channel
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token' && openclaw config set channels.telegram.enabled true --json && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
                     $chatId = $json.telegram_chat_id
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set telegram_chat_id '$chatId'" 2>&1 | Out-Null
+                    # Set allowFrom as JSON array with the user's numeric Telegram ID
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
                     $name = $json.agent_name
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_name '$name'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.name '$name'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_persona'] -and $json.agent_persona) {
                     $persona = $json.agent_persona
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set agent_persona '$persona'" 2>&1 | Out-Null
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.theme '$persona'" 2>&1 | Out-Null
                 }
             } catch {
                 # Ignore JSON parse errors
