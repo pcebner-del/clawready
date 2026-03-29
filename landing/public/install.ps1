@@ -278,14 +278,29 @@ function Install-Ubuntu {
 
     Write-OK "$UBUNTU_DISTRO install initiated"
 
-    # Verify installation via AppxPackage (reliable on PS5, avoids UTF-16 wsl --list issue)
-    Start-Sleep -Seconds 5
-    $ubuntuVerified = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
+    # Wait for the distro to become accessible (retry up to 60 seconds)
+    Write-Step "Waiting for Ubuntu to initialize..."
+    $maxWait = 60
+    $waited = 0
+    $ubuntuReady = $false
+    while ($waited -lt $maxWait) {
+        $prevPref2 = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $test = wsl -u root -d $UBUNTU_DISTRO -- echo "ok" 2>&1
+        $ec = $LASTEXITCODE
+        $ErrorActionPreference = $prevPref2
+        if ($ec -eq 0 -and ($test -join '') -match 'ok') {
+            $ubuntuReady = $true
+            break
+        }
+        Start-Sleep -Seconds 5
+        $waited += 5
+        Write-Host "  Still waiting... ($waited`s)" -ForegroundColor DarkGray
+    }
 
-    if (-not $ubuntuVerified) {
-        Write-Fail "Ubuntu installation could not be verified."
-        Write-Host "  Please install Ubuntu 22.04 manually from the Microsoft Store," -ForegroundColor Gray
-        Write-Host "  then re-run this script." -ForegroundColor Gray
+    if (-not $ubuntuReady) {
+        Write-Fail "Ubuntu installed but not responding after 60 seconds."
+        Write-Host "  Try rebooting your PC and re-running this installer." -ForegroundColor Gray
         exit 1
     }
 
