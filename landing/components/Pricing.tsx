@@ -160,7 +160,7 @@ export default function Pricing() {
                     <div className="mt-3 bg-[#050a14] border border-blue-500/20 rounded-lg p-3">
                       <p className="text-slate-500 text-xs mb-1">Paste this command:</p>
                       <code className="text-blue-300 font-mono text-xs break-all">
-                        irm clawreadyapp.com/install.ps1 | iex
+                        irm https://clawreadyapp.com/install.ps1 | iex
                       </code>
                     </div>
                   </div>

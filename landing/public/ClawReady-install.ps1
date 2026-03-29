@@ -136,6 +136,29 @@ function Assert-WindowsVersion {
 }
 
 # -----------------------------------------------------------------------------
+# Detect actual WSL Ubuntu distro name
+# -----------------------------------------------------------------------------
+function Resolve-DistroName {
+    Write-Step "Detecting WSL2 Ubuntu distro name..."
+    $candidates = @("Ubuntu-22.04", "Ubuntu-22.04 LTS", "Ubuntu", "Ubuntu-20.04", "Ubuntu-18.04")
+    foreach ($name in $candidates) {
+        $prevPref = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $test = wsl -d $name -- echo "ok" 2>&1
+        $exitCode = $LASTEXITCODE
+        $ErrorActionPreference = $prevPref
+        if ($exitCode -eq 0 -and ($test -join '') -match 'ok') {
+            $script:UBUNTU_DISTRO = $name
+            Write-OK "Using WSL distro: $name"
+            return
+        }
+    }
+    Write-Fail "Could not find a running Ubuntu WSL2 distro."
+    Write-Host "  Please install Ubuntu from the Microsoft Store and re-run this installer." -ForegroundColor Gray
+    exit 1
+}
+
+# -----------------------------------------------------------------------------
 # Step 3: Enable WSL2 and Virtual Machine Platform
 # -----------------------------------------------------------------------------
 function Enable-WSL2 {
@@ -215,11 +238,19 @@ function Enable-WSL2 {
 function Install-Ubuntu {
     Write-Step "Checking Ubuntu installation..."
 
-    # Ground-truth check: can we actually run inside the distro as root?
+    # Ground-truth check: can WSL actually run a distro? AppxPackage presence alone is not enough
+    # (the app can be installed but never initialized as a WSL distro)
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    $testResult = wsl -d Ubuntu-22.04 -u root -- echo "ok" 2>&1
-    $distroReady = ($LASTEXITCODE -eq 0 -and ($testResult -join '') -match 'ok')
+    $candidates = @("Ubuntu-22.04", "Ubuntu-22.04 LTS", "Ubuntu", "Ubuntu-20.04")
+    $distroReady = $false
+    foreach ($name in $candidates) {
+        $test = wsl -d $name -- echo "ok" 2>&1
+        if ($LASTEXITCODE -eq 0 -and ($test -join '') -match 'ok') {
+            $distroReady = $true
+            break
+        }
+    }
     $ErrorActionPreference = $prevPref
 
     if ($distroReady) {
@@ -227,44 +258,24 @@ function Install-Ubuntu {
         return
     }
 
-    # Distro not accessible — install it
+    Write-Step "Ubuntu not initialized in WSL — installing now..."
+
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
+    Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
 
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    $installOutput = wsl --install -d Ubuntu-22.04 --no-launch 2>&1
+    $installOutput = wsl --install -d $UBUNTU_DISTRO --no-launch 2>&1
     $ErrorActionPreference = $prevPref
 
     Write-OK "$UBUNTU_DISTRO install initiated"
 
-    # Initialize distro as root (non-interactive, no user creation prompt)
-    Write-Step "Initializing Ubuntu (this may take a minute)..."
-    $prevPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
+    # Verify installation via AppxPackage (reliable on PS5, avoids UTF-16 wsl --list issue)
+    Start-Sleep -Seconds 5
+    $ubuntuVerified = (Get-AppxPackage -Name "*Ubuntu*" -ErrorAction SilentlyContinue) -ne $null
 
-    # Try ubuntu2204.exe install --root first (cleanest non-interactive init)
-    $exe = Get-Command "ubuntu2204.exe" -ErrorAction SilentlyContinue
-    if ($exe) {
-        Start-Process -FilePath "ubuntu2204.exe" -ArgumentList "install","--root" -Wait -NoNewWindow 2>&1 | Out-Null
-    }
-
-    # Wait for distro to become accessible as root
-    $maxWait = 120
-    $waited = 0
-    $ready = $false
-    while ($waited -lt $maxWait) {
-        Start-Sleep -Seconds 3
-        $waited += 3
-        $check = wsl -d Ubuntu-22.04 -u root -- echo "ok" 2>&1
-        if ($LASTEXITCODE -eq 0 -and ($check -join '') -match 'ok') {
-            $ready = $true
-            break
-        }
-    }
-    $ErrorActionPreference = $prevPref
-
-    if (-not $ready) {
-        Write-Fail "Ubuntu installation could not be verified after ${maxWait}s."
+    if (-not $ubuntuVerified) {
+        Write-Fail "Ubuntu installation could not be verified."
         Write-Host "  Please install Ubuntu 22.04 manually from the Microsoft Store," -ForegroundColor Gray
         Write-Host "  then re-run this script." -ForegroundColor Gray
         exit 1
@@ -300,7 +311,9 @@ appendWindowsPath = true
     $escapedContent = $wslConfContent -replace '"', '\"'
     $cmd = "sudo tee /etc/wsl.conf > /dev/null << 'WSLEOF'" + "`n" + $wslConfContent + "`nWSLEOF"
 
-    # Run as root directly (-u root) to avoid sudo password prompt
+    wsl -d $UBUNTU_DISTRO -- bash -c "echo '$wslConfContent' | sudo tee /etc/wsl.conf > /dev/null" 2>&1 | Out-Null
+
+    # More reliable approach: write via heredoc
     $scriptBlock = @'
 cat > /tmp/wsl.conf.tmp << 'EOF'
 [boot]
@@ -318,11 +331,11 @@ generateResolvConf = true
 enabled = true
 appendWindowsPath = true
 EOF
-cp /tmp/wsl.conf.tmp /etc/wsl.conf
+sudo cp /tmp/wsl.conf.tmp /etc/wsl.conf
 echo "done"
 '@
 
-    $result = wsl -d Ubuntu-22.04 -u root -- bash -c $scriptBlock 2>&1
+    $result = wsl -d $UBUNTU_DISTRO -- bash -c $scriptBlock 2>&1
     Write-OK "WSL2 systemd configured in /etc/wsl.conf"
 
     # Restart WSL to apply systemd
@@ -403,10 +416,10 @@ echo "CLAWREADY_SUCCESS"
     $ErrorActionPreference = 'Continue'
 
     # Decode base64 in WSL and save to /tmp — guaranteed LF endings
-    wsl -d Ubuntu-22.04 -u root -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
+    wsl -d $UBUNTU_DISTRO -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
 
     # Execute the install script
-    $output = wsl -d Ubuntu-22.04 -u root -- bash /tmp/clawready-install.sh 2>&1
+    $output = wsl -d $UBUNTU_DISTRO -- bash /tmp/clawready-install.sh 2>&1
     $ErrorActionPreference = $prevPref
 
     # Print output
@@ -436,7 +449,7 @@ function Set-BootTask {
 
     # WSL command to start OpenClaw via systemd
     $wslCommand = "C:\Windows\System32\wsl.exe"
-    $wslArgs    = '-d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && openclaw gateway start" &'
+    $wslArgs    = "-d $UBUNTU_DISTRO -- bash -c `"source ~/.nvm/nvm.sh && openclaw gateway start`" &"
 
     $action  = New-ScheduledTaskAction -Execute $wslCommand -Argument $wslArgs
     $trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -688,26 +701,52 @@ function Start-SetupWizard {
     </p>
     <div class="info-box">
       You'll need:
-      <br>&#x2022; An Anthropic API key (get one at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>)
+      <br>&#x2022; An Anthropic API key <strong>OR</strong> a Claude Pro/Max subscription
       <br>&#x2022; A Telegram account (optional, for messaging your agent)
     </div>
     <button class="btn" onclick="nextPanel(1)">Let's go &rarr;</button>
   </div>
 
-  <!-- Panel 2: API Key -->
+  <!-- Panel 2: Anthropic Auth -->
   <div class="panel" id="panel-2">
-    <p class="panel-title"><span class="step-num">1</span> Anthropic API Key</p>
-    <p class="panel-desc">
-      Your API key powers the AI. It starts with <code style="color:#60a5fa">sk-ant-</code>.
-      Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
-    </p>
-    <label for="api-key">API Key</label>
-    <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
-    <div class="info-box">
-      Your key is stored locally in OpenClaw's config on your machine.
-      It is never sent to ClawReady servers.
+    <p class="panel-title"><span class="step-num">1</span> Connect to Anthropic</p>
+    <!-- Auth mode tabs -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">
+      <button class="btn" id="tab-apikey" style="flex:1;background:#2563eb;color:white;border:none;" onclick="switchAuthTab('apikey')">API Key</button>
+      <button class="btn" id="tab-subscription" style="flex:1;background:transparent;border:1px solid #334155;color:#94a3b8;" onclick="switchAuthTab('subscription')">Claude Subscription</button>
     </div>
-    <button class="btn" onclick="saveApiKey()">Save API key &rarr;</button>
+
+    <!-- Mode A: API Key -->
+    <div id="auth-apikey">
+      <p class="panel-desc">
+        Your API key powers the AI. It starts with <code style="color:#60a5fa">sk-ant-</code>.
+        Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#60a5fa">console.anthropic.com/keys</a>.
+      </p>
+      <label for="api-key">API Key</label>
+      <input type="text" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
+      <div class="info-box">
+        Your key is stored locally in OpenClaw's config on your machine.
+        It is never sent to ClawReady servers.
+      </div>
+    </div>
+
+    <!-- Mode B: Claude Subscription -->
+    <div id="auth-subscription" style="display:none;">
+      <div class="info-box">
+        Already paying for Claude Pro or Max? Use your existing subscription &mdash; no extra API fees.
+      </div>
+      <p class="panel-desc">
+        Open a <strong style="color:#e2e8f0">new PowerShell window</strong> (Start &rarr; search PowerShell &rarr; Run as Administrator), then paste this command:<br><br>
+        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
+        It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
+        <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
+      </p>
+      <label for="setup-token">Setup Token</label>
+      <input type="text" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
+    </div>
+
+    <button class="btn" onclick="saveApiKey()">Continue &rarr;</button>
     <button class="btn btn-secondary" onclick="nextPanel(2)">Skip for now</button>
   </div>
 
@@ -764,6 +803,30 @@ function Start-SetupWizard {
 
 <script>
 let currentPanel = 1;
+let authTab = 'apikey';
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  if (tab === 'apikey') {
+    document.getElementById('auth-apikey').style.display = '';
+    document.getElementById('auth-subscription').style.display = 'none';
+    document.getElementById('tab-apikey').style.background = '#2563eb';
+    document.getElementById('tab-apikey').style.color = 'white';
+    document.getElementById('tab-apikey').style.border = 'none';
+    document.getElementById('tab-subscription').style.background = 'transparent';
+    document.getElementById('tab-subscription').style.color = '#94a3b8';
+    document.getElementById('tab-subscription').style.border = '1px solid #334155';
+  } else {
+    document.getElementById('auth-apikey').style.display = 'none';
+    document.getElementById('auth-subscription').style.display = '';
+    document.getElementById('tab-apikey').style.background = 'transparent';
+    document.getElementById('tab-apikey').style.color = '#94a3b8';
+    document.getElementById('tab-apikey').style.border = '1px solid #334155';
+    document.getElementById('tab-subscription').style.background = '#2563eb';
+    document.getElementById('tab-subscription').style.color = 'white';
+    document.getElementById('tab-subscription').style.border = 'none';
+  }
+}
 
 function nextPanel(from) {
   document.getElementById('panel-' + from).classList.remove('active');
@@ -777,17 +840,32 @@ function nextPanel(from) {
 }
 
 function saveApiKey() {
-  const key = document.getElementById('api-key').value.trim();
-  if (key && !key.startsWith('sk-ant-')) {
-    alert('That does not look like an Anthropic API key. It should start with sk-ant-');
-    return;
-  }
-  if (key) {
-    fetch('/save-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ anthropic_api_key: key })
-    }).catch(() => {});
+  if (authTab === 'apikey') {
+    const key = document.getElementById('api-key').value.trim();
+    if (key && !key.startsWith('sk-ant-')) {
+      alert('That does not look like an Anthropic API key. It should start with sk-ant-');
+      return;
+    }
+    if (key) {
+      fetch('/save-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anthropic_api_key: key })
+      }).catch(() => {});
+    }
+  } else {
+    const token = document.getElementById('setup-token').value.trim();
+    if (token && !token.startsWith('sk-ant-oat-')) {
+      alert('That does not look like a valid setup token. It should start with sk-ant-oat-');
+      return;
+    }
+    if (token) {
+      fetch('/save-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setup_token: token })
+      }).catch(() => {});
+    }
   }
   nextPanel(2);
 }
@@ -795,6 +873,10 @@ function saveApiKey() {
 function saveTelegram() {
   const token = document.getElementById('tg-token').value.trim();
   const chatId = document.getElementById('tg-chat').value.trim();
+  if ((token && !chatId) || (!token && chatId)) {
+    alert('Please fill in both the bot token and your chat ID, or leave both blank to skip.');
+    return;
+  }
   if (token && chatId) {
     fetch('/save-config', {
       method: 'POST',
@@ -812,14 +894,13 @@ function finishSetup() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ agent_name: name, agent_persona: persona, setup_complete: true })
-  }).catch(() => {});
+  })
+  .catch(() => {})
+  .finally(() => fetch('/setup-complete').catch(() => {}));
   document.getElementById('panel-4').classList.remove('active');
   document.getElementById('dot-4').classList.remove('active');
   document.getElementById('dot-4').classList.add('done');
   document.getElementById('panel-5').classList.add('active');
-
-  // Signal the PowerShell script that setup is done
-  fetch('/setup-complete').catch(() => {});
 }
 </script>
 </body>
@@ -912,52 +993,50 @@ function finishSetup() {
         $elapsed += 2
     }
 
+    Start-Sleep -Milliseconds 300
+
     # Apply config if collected
     if (Test-Path "$env:TEMP\clawready-config.json") {
         $configLines = Get-Content "$env:TEMP\clawready-config.json" -ErrorAction SilentlyContinue
         Remove-Item "$env:TEMP\clawready-config.json" -ErrorAction SilentlyContinue
 
-        # Parse wizard output
-        $apiKey   = ""
-        $tgToken  = ""
-        $tgChatId = ""
-        $agentName = "Loki"
-
+        # Parse and apply config via openclaw CLI inside WSL2
         foreach ($line in $configLines) {
             try {
                 $json = $line | ConvertFrom-Json
-                if ($json.anthropic_api_key) { $apiKey   = $json.anthropic_api_key }
-                if ($json.telegram_token)    { $tgToken  = $json.telegram_token }
-                if ($json.telegram_chat_id)  { $tgChatId = $json.telegram_chat_id }
-                if ($json.agent_name)        { $agentName = $json.agent_name }
-            } catch {}
-        }
-
-        if ($apiKey) {
-            # Build openclaw.json config (JSON5 format OpenClaw expects)
-            $telegramBlock = ""
-            if ($tgToken -and $tgChatId) {
-                $telegramBlock = @"
-  channels: {
-    telegram: {
-      enabled: true,
-      botToken: "$tgToken",
-      dmPolicy: "allowlist",
-      allowFrom: ["tg:$tgChatId"],
-    },
-  },
-"@
+                if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
+                    $key = $json.anthropic_api_key
+                    # Use openclaw onboard --non-interactive to store API key in auth-profiles.json
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
+                }
+                if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
+                    # Install Claude Code CLI in WSL2 if not present
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
+                    # Feed the token to openclaw auth-profiles.json
+                    $token = $json.setup_token
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
+                }
+                if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
+                    $token = $json.telegram_token
+                    # Set bot token and enable Telegram channel
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token' && openclaw config set channels.telegram.enabled true --json && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
+                }
+                if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
+                    $chatId = $json.telegram_chat_id
+                    # Set allowFrom as JSON array with the user's numeric Telegram ID
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
+                }
+                if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
+                    $name = $json.agent_name
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.name '$name'" 2>&1 | Out-Null
+                }
+                if ($json.PSObject.Properties['agent_persona'] -and $json.agent_persona) {
+                    $persona = $json.agent_persona
+                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.theme '$persona'" 2>&1 | Out-Null
+                }
+            } catch {
+                # Ignore JSON parse errors
             }
-
-            $ocConfig = "{`n  env: { ANTHROPIC_API_KEY: `"$apiKey`" },`n$telegramBlock`n  agents: { defaults: { model: { primary: `"anthropic/claude-sonnet-4-6`" } } },`n}"
-
-            # Write config directly into WSL via stdin (avoids path conversion issues)
-            $configBytes = [System.Text.Encoding]::UTF8.GetBytes($ocConfig)
-            $configB64   = [Convert]::ToBase64String($configBytes)
-
-            wsl -d Ubuntu-22.04 -u root -- bash -c "mkdir -p /root/.openclaw && echo '$configB64' | base64 -d > /root/.openclaw/openclaw.json"
-
-            Write-OK "OpenClaw configuration written"
         }
     }
 
@@ -975,8 +1054,8 @@ function Start-OpenClaw {
     Write-Step "Starting OpenClaw for the first time..."
 
     try {
-        # Start OpenClaw in background inside WSL2 (as root where it's installed)
-        wsl -d Ubuntu-22.04 -u root -- bash -c "source /root/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
+        # Start OpenClaw in background inside WSL2
+        wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
         Start-Sleep -Seconds 3
         Write-OK "OpenClaw started in background"
     } catch {
@@ -1012,7 +1091,7 @@ function Show-Success {
     Write-Host "    2. It will auto-start on every Windows login" -ForegroundColor Gray
     Write-Host "    3. Message it via Telegram (if configured)" -ForegroundColor Gray
     Write-Host "    4. To restart manually: " -NoNewline -ForegroundColor Gray
-    Write-Host "wsl -d Ubuntu-22.04 -- openclaw gateway start" -ForegroundColor Blue
+    Write-Host "wsl -d $UBUNTU_DISTRO -- openclaw gateway start" -ForegroundColor Blue
     Write-Host ""
     Write-Host "  Thank you for using ClawReady!" -ForegroundColor Blue
     Write-Host ""
@@ -1050,6 +1129,7 @@ function Main {
     Enable-WSL2
     Install-Ubuntu
     Set-WSLSystemd
+    Resolve-DistroName
     Install-NodeAndOpenClaw
     Set-BootTask
     Set-PowerSettings
