@@ -353,15 +353,20 @@ function Install-NodeAndOpenClaw {
     Write-Host "  (This may take 3-5 minutes)" -ForegroundColor DarkGray
     Write-Host ""
 
+    # Set root as default WSL user so installer and interactive sessions are consistent
+    wsl -u root -d $UBUNTU_DISTRO -- bash -c "echo -e '[user]\ndefault=root' >> /etc/wsl.conf" 2>&1 | Out-Null
+    wsl --shutdown 2>&1 | Out-Null
+    Start-Sleep -Seconds 3
+
     $installScript = @'
 #!/bin/bash
 set -e
 
 echo "  [WSL] Updating apt packages..."
-sudo apt-get update -qq 2>&1 | tail -1
+apt-get update -qq 2>&1 | tail -1
 
 echo "  [WSL] Installing build essentials..."
-sudo apt-get install -y -qq curl git build-essential 2>&1 | tail -1
+apt-get install -y -qq curl git build-essential 2>&1 | tail -1
 
 echo "  [WSL] Installing nvm..."
 export NVM_DIR="$HOME/.nvm"
