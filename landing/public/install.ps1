@@ -106,7 +106,15 @@ function Assert-Administrator {
         $choice = Read-Host "  Would you like ClawReady to re-launch as Administrator? [Y/n]"
         if ($choice -ne 'n' -and $choice -ne 'N') {
             $scriptPath = $MyInvocation.ScriptName
-            Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`""
+            if ($scriptPath -and (Test-Path $scriptPath)) {
+                # Running from a file — re-launch the file as admin
+                Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`""
+            } else {
+                # Running via irm | iex — download to temp file and re-launch as admin
+                $tempScript = Join-Path $env:TEMP "clawready-install.ps1"
+                Invoke-WebRequest -Uri "https://clawreadyapp.com/install.ps1" -OutFile $tempScript -UseBasicParsing
+                Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$tempScript`""
+            }
         }
         exit 1
     }
