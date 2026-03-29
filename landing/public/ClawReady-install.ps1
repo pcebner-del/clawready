@@ -856,8 +856,8 @@ function saveApiKey() {
     }
   } else {
     const token = document.getElementById('setup-token').value.trim();
-    if (token && !token.startsWith('sk-ant-oat-')) {
-      alert('That does not look like a valid setup token. It should start with sk-ant-oat-');
+    if (token && !token.startsWith('sk-ant-oat')) {
+      alert('That does not look like a valid setup token. It should start with sk-ant-oat');
       return;
     }
     if (token) {
