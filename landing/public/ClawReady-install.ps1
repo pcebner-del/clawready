@@ -152,7 +152,7 @@ function Resolve-DistroName {
     foreach ($name in $candidates) {
         $prevPref = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
-        $test = wsl -d $name -- echo "ok" 2>&1
+        $test = wsl -u root -d $name -- echo "ok" 2>&1
         $exitCode = $LASTEXITCODE
         $ErrorActionPreference = $prevPref
         if ($exitCode -eq 0 -and ($test -join '') -match 'ok') {
@@ -253,7 +253,7 @@ function Install-Ubuntu {
     $candidates = @("Ubuntu-22.04", "Ubuntu-22.04 LTS", "Ubuntu", "Ubuntu-20.04")
     $distroReady = $false
     foreach ($name in $candidates) {
-        $test = wsl -d $name -- echo "ok" 2>&1
+        $test = wsl -u root -d $name -- echo "ok" 2>&1
         if ($LASTEXITCODE -eq 0 -and ($test -join '') -match 'ok') {
             $distroReady = $true
             break
@@ -319,7 +319,7 @@ appendWindowsPath = true
     $escapedContent = $wslConfContent -replace '"', '\"'
     $cmd = "sudo tee /etc/wsl.conf > /dev/null << 'WSLEOF'" + "`n" + $wslConfContent + "`nWSLEOF"
 
-    wsl -d $UBUNTU_DISTRO -- bash -c "echo '$wslConfContent' | sudo tee /etc/wsl.conf > /dev/null" 2>&1 | Out-Null
+    wsl -u root -d $UBUNTU_DISTRO -- bash -c "echo '$wslConfContent' | sudo tee /etc/wsl.conf > /dev/null" 2>&1 | Out-Null
 
     # More reliable approach: write via heredoc
     $scriptBlock = @'
@@ -343,7 +343,7 @@ sudo cp /tmp/wsl.conf.tmp /etc/wsl.conf
 echo "done"
 '@
 
-    $result = wsl -d $UBUNTU_DISTRO -- bash -c $scriptBlock 2>&1
+    $result = wsl -u root -d $UBUNTU_DISTRO -- bash -c $scriptBlock 2>&1
     Write-OK "WSL2 systemd configured in /etc/wsl.conf"
 
     # Restart WSL to apply systemd
@@ -429,10 +429,10 @@ echo "CLAWREADY_SUCCESS"
     $ErrorActionPreference = 'Continue'
 
     # Decode base64 in WSL and save to /tmp — guaranteed LF endings
-    wsl -d $UBUNTU_DISTRO -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
+    wsl -u root -d $UBUNTU_DISTRO -- bash -c "echo '$b64' | base64 -d > /tmp/clawready-install.sh && chmod +x /tmp/clawready-install.sh" 2>&1 | Out-Null
 
     # Execute the install script
-    $output = wsl -d $UBUNTU_DISTRO -- bash /tmp/clawready-install.sh 2>&1
+    $output = wsl -u root -d $UBUNTU_DISTRO -- bash /tmp/clawready-install.sh 2>&1
     $ErrorActionPreference = $prevPref
 
     # Print output
@@ -750,7 +750,7 @@ function Start-SetupWizard {
       </div>
       <p class="panel-desc">
         Open a <strong style="color:#e2e8f0">new PowerShell window</strong> (Start &rarr; search PowerShell &rarr; Run as Administrator), then paste this command:<br><br>
-        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
+        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
         <button onclick="navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
         It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
         <span style="color:#fbbf24;font-size:0.85rem;">&#9888; If your browser doesn&apos;t open automatically, press <strong>c</strong> in the terminal to copy the login URL, then paste it in your browser.</span><br><br>
@@ -1021,32 +1021,32 @@ function finishSetup() {
                 if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
                     # Use openclaw onboard --non-interactive to store API key in auth-profiles.json
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
                     # Install Claude Code CLI in WSL2 if not present
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
                     # Feed the token to openclaw auth-profiles.json
                     $token = $json.setup_token
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
                     # Set bot token and enable Telegram channel
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token' && openclaw config set channels.telegram.enabled true --json && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token' && openclaw config set channels.telegram.enabled true --json && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
                     $chatId = $json.telegram_chat_id
                     # Set allowFrom as JSON array with the user's numeric Telegram ID
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
                     $name = $json.agent_name
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.name '$name'" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.name '$name'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_persona'] -and $json.agent_persona) {
                     $persona = $json.agent_persona
-                    wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.theme '$persona'" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.theme '$persona'" 2>&1 | Out-Null
                 }
             } catch {
                 # Ignore JSON parse errors
@@ -1069,7 +1069,7 @@ function Start-OpenClaw {
 
     try {
         # Start OpenClaw in background inside WSL2
-        wsl -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
+        wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
         Start-Sleep -Seconds 3
         Write-OK "OpenClaw started in background"
     } catch {
