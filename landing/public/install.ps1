@@ -768,7 +768,8 @@ function Start-SetupWizard {
         <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
         <button onclick="navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
         It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
-        <span style="color:#fbbf24;font-size:0.85rem;">&#9888; If your browser doesn&apos;t open automatically, press <strong>c</strong> in the terminal to copy the login URL, then paste it in your browser.</span><br><br>
+        <span style="color:#fbbf24;font-size:0.85rem;">&#9888; If your browser doesn&apos;t open automatically, <strong>manually highlight the URL in the terminal and copy it</strong>, then paste it in your browser.</span><br><br>
+        <span style="color:#64748b;font-size:0.8rem;">&#128161; <strong>Tip:</strong> To paste into the terminal, <strong>right-click</strong> (or two-finger tap on a touchpad) &mdash; Ctrl+V does not work in most terminals.</span><br><br>
         <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
       </p>
       <label for="setup-token">Setup Token</label>
@@ -788,13 +789,15 @@ function Start-SetupWizard {
     </p>
     <div class="info-box">
       To create a bot:
-      <br>1. Open Telegram and message <strong>@BotFather</strong>
-      <br>2. Send <code style="color:#60a5fa">/newbot</code> and follow the prompts
-      <br>3. Copy the token it gives you and paste it below
+      <br>1. In Telegram, tap the <strong>search icon</strong> and search for <strong>@BotFather</strong> &mdash; tap it, then press <strong>Start</strong>
+      <br>2. Send <code style="color:#60a5fa">/newbot</code> and follow the prompts &mdash; choose a name and a username ending in <em>bot</em>
+      <br>3. BotFather will give you a token &mdash; copy it and paste it below
+      <br>4. <strong>Remember your bot&apos;s username</strong> &mdash; after setup, search for it in Telegram, tap it, and press <strong>Start</strong> to activate it
     </div>
     <label for="tg-token">Bot Token</label>
     <input type="text" id="tg-token" placeholder="1234567890:ABCDef..." autocomplete="off" />
-    <label for="tg-chat">Your Chat ID (message @userinfobot to get it)</label>
+    <label for="tg-chat">Your Chat ID</label>
+    <p style="color:#94a3b8;font-size:0.82rem;margin:2px 0 8px;">Search for <strong>@userinfobot</strong> in Telegram, tap it, press <strong>Start</strong> &mdash; it will reply with your numeric ID. Paste it below.</p>
     <input type="text" id="tg-chat" placeholder="123456789" autocomplete="off" />
     <button class="btn" onclick="saveTelegram()">Save Telegram &rarr;</button>
     <button class="btn btn-secondary" onclick="nextPanel(3)">Skip for now</button>
