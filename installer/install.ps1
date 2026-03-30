@@ -766,7 +766,7 @@ function Start-SetupWizard {
       <p class="panel-desc">
         Open a <strong style="color:#e2e8f0">new PowerShell window</strong> (Start &rarr; search PowerShell &rarr; Run as Administrator), then paste this command:<br><br>
         <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
+        <button id="copy-token-cmd-btn" onclick="(function(btn){navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText).then(function(){btn.textContent='Copied!';btn.style.background='#14532d';btn.style.borderColor='#22c55e';btn.style.color='#86efac';setTimeout(function(){btn.textContent='Copy';btn.style.background='#1e3a6e';btn.style.borderColor='#3b82f6';btn.style.color='#60a5fa';},2000);}).catch(function(){btn.textContent='Failed';setTimeout(function(){btn.textContent='Copy';},2000);});})(this)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
         It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
         <span style="color:#fbbf24;font-size:0.85rem;">&#9888; If your browser doesn&apos;t open automatically, <strong>manually highlight the URL in the terminal and copy it</strong>, then paste it in your browser.</span><br><br>
         <span style="color:#64748b;font-size:0.8rem;">&#128161; <strong>Tip:</strong> To paste into the terminal, <strong>right-click</strong> (or two-finger tap on a touchpad) &mdash; Ctrl+V does not work in most terminals.</span><br><br>
@@ -826,6 +826,9 @@ function Start-SetupWizard {
         OpenClaw is installed, configured, and will start automatically with Windows.
         <br><br>
         Your AI agent is running at <strong style="color:#60a5fa">localhost:3000</strong>
+        <br><br>
+        <span style="color:#fbbf24;font-weight:bold;">&#9888; One last step if you set up Telegram:</span><br>
+        Open Telegram, <strong>search for your bot by name</strong>, tap it, and press <strong>Start</strong>. Your agent will introduce itself!
         <br><br>
         You can close this window.
       </p>
@@ -1050,13 +1053,17 @@ function finishSetup() {
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
-                    # Set bot token and enable Telegram channel
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token' && openclaw config set channels.telegram.enabled true --json && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
+                    # Set bot token and enable Telegram channel (separate commands to avoid silent chain failures)
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token'" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.enabled true --json" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
                     $chatId = $json.telegram_chat_id
                     # Set allowFrom as JSON array with the user's numeric Telegram ID
                     wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
+                    # Ensure dmPolicy is allowlist (belt and suspenders)
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
                     $name = $json.agent_name
