@@ -18,7 +18,7 @@ if [[ "$APIKEY" != sk-ant-* ]]; then
 fi
 
 echo "Saving auth..."
-ANTHROPIC_API_KEY="$APIKEY" openclaw onboard --non-interactive --mode local --auth-choice apiKey --anthropic-api-key "$APIKEY" --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui
+ANTHROPIC_API_KEY="$APIKEY" openclaw onboard --non-interactive --accept-risk --mode local --auth-choice apiKey --anthropic-api-key "$APIKEY" --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui
 
 echo "Restarting gateway..."
 openclaw gateway restart

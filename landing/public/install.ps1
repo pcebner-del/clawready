@@ -1042,7 +1042,7 @@ function finishSetup() {
                 if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
                     # Use openclaw onboard --non-interactive to store API key in auth-profiles.json
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --accept-risk --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
                     # Install Claude Code CLI in WSL2 if not present
