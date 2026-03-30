@@ -17,31 +17,51 @@ if [[ "$APIKEY" != sk-ant-* ]]; then
   exit 1
 fi
 
-echo "Writing auth file..."
+echo "Writing auth files..."
 python3 - <<PYEOF
 import json, os
 
-apikey = """$APIKEY"""
-path = os.path.expanduser("~/.openclaw/auth-profiles.json")
-os.makedirs(os.path.dirname(path), exist_ok=True)
+apikey = """$APIKEY""".strip()
+base = os.path.expanduser("~/.openclaw")
+os.makedirs(base, exist_ok=True)
 
-data = {
+# Write auth-profiles.json
+profiles_path = os.path.join(base, "auth-profiles.json")
+profiles = {
   "version": 1,
   "profiles": {
     "anthropic:manual": {
       "type": "api-key",
       "provider": "anthropic",
-      "apiKey": apikey.strip()
+      "apiKey": apikey
     }
   }
 }
+json.dump(profiles, open(profiles_path, "w"), indent=2)
+print("auth-profiles.json saved")
 
-json.dump(data, open(path, "w"), indent=2)
-print("Auth saved to", path)
+# Update openclaw.json auth mode to api-key
+config_path = os.path.join(base, "openclaw.json")
+if os.path.exists(config_path):
+    d = json.load(open(config_path))
+    if "auth" not in d:
+        d["auth"] = {}
+    if "profiles" not in d["auth"]:
+        d["auth"]["profiles"] = {}
+    d["auth"]["profiles"]["anthropic:manual"] = {
+        "provider": "anthropic",
+        "mode": "api-key"
+    }
+    json.dump(d, open(config_path, "w"), indent=2)
+    print("openclaw.json auth mode updated to api-key")
+else:
+    print("WARNING: openclaw.json not found")
+
+print("All done!")
 PYEOF
 
 echo "Restarting gateway..."
 openclaw gateway restart
-
+sleep 3
 echo ""
-echo "Done! Try messaging your bot now."
+echo "Auth saved and gateway restarted. Try messaging your bot now!"
