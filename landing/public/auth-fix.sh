@@ -17,8 +17,28 @@ if [[ "$APIKEY" != sk-ant-* ]]; then
   exit 1
 fi
 
-echo "Saving auth..."
-ANTHROPIC_API_KEY="$APIKEY" openclaw onboard --non-interactive --accept-risk --mode local --auth-choice apiKey --anthropic-api-key "$APIKEY" --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui
+echo "Writing auth file..."
+python3 - <<PYEOF
+import json, os
+
+apikey = """$APIKEY"""
+path = os.path.expanduser("~/.openclaw/auth-profiles.json")
+os.makedirs(os.path.dirname(path), exist_ok=True)
+
+data = {
+  "version": 1,
+  "profiles": {
+    "anthropic:manual": {
+      "type": "api-key",
+      "provider": "anthropic",
+      "apiKey": apikey.strip()
+    }
+  }
+}
+
+json.dump(data, open(path, "w"), indent=2)
+print("Auth saved to", path)
+PYEOF
 
 echo "Restarting gateway..."
 openclaw gateway restart
