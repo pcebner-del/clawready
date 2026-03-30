@@ -31,7 +31,7 @@ profiles = {
   "version": 1,
   "profiles": {
     "anthropic:manual": {
-      "type": "api-key",
+      "type": "api_key",
       "provider": "anthropic",
       "apiKey": apikey
     }
@@ -50,7 +50,7 @@ if os.path.exists(config_path):
         d["auth"]["profiles"] = {}
     d["auth"]["profiles"]["anthropic:manual"] = {
         "provider": "anthropic",
-        "mode": "api-key"
+        "mode": "api_key"
     }
     json.dump(d, open(config_path, "w"), indent=2)
     print("openclaw.json auth mode updated to api-key")
