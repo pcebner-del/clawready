@@ -1096,6 +1096,9 @@ function Start-OpenClaw {
         # Repair service config first (fixes PATH and systemd unit issues)
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw doctor --repair" 2>&1 | Out-Null
         Start-Sleep -Seconds 2
+        # Enable systemd linger for root so the user service session survives after terminal closes
+        wsl -u root -d $UBUNTU_DISTRO -- bash -c "loginctl enable-linger root" 2>&1 | Out-Null
+        Start-Sleep -Seconds 1
         # Start OpenClaw in background inside WSL2
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
         Start-Sleep -Seconds 5
