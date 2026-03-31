@@ -825,14 +825,20 @@ function Start-SetupWizard {
       <p>
         OpenClaw is installed, configured, and will start automatically with Windows.
         <br><br>
-        Your AI agent is running at <strong style="color:#60a5fa">localhost:3000</strong>
-        <br><br>
-        <span style="color:#fbbf24;font-weight:bold;">&#9888; One last step if you set up Telegram:</span><br>
-        Open Telegram, <strong>search for your bot by name</strong>, tap it, and press <strong>Start</strong>. Your agent will introduce itself!
+        <span style="color:#fbbf24;font-weight:bold;">&#9888; One last step &mdash; activate your Telegram bot:</span><br><br>
+        Open Telegram and search for <strong id="bot-username-display" style="color:#60a5fa;font-size:1.1rem;">your bot</strong>, tap it, and press <strong>Start</strong>. Your agent will introduce itself!
         <br><br>
         You can close this window.
       </p>
     </div>
+<script>
+  (function() {
+    var el = document.getElementById('bot-username-display');
+    if (el && window._botUsername) {
+      el.textContent = window._botUsername;
+    }
+  })();
+</script>
   </div>
 </div>
 
@@ -918,6 +924,14 @@ function saveTelegram() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegram_token: token, telegram_chat_id: chatId })
     }).catch(() => {});
+    // Fetch bot username from Telegram so we can show it on the success screen
+    fetch('https://api.telegram.org/bot' + token + '/getMe')
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok && data.result.username) {
+          window._botUsername = '@' + data.result.username;
+        }
+      }).catch(() => {});
   }
   nextPanel(3);
 }
