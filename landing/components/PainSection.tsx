@@ -97,13 +97,13 @@ export default function PainSection() {
 
             {/* Success terminal snippet */}
             <div className="bg-[#050a14] rounded-xl p-4 border border-blue-500/10">
-              <p className="terminal-text text-xs text-slate-500 mb-2"># 5 minutes later...</p>
+              <p className="terminal-text text-xs text-slate-500 mb-2"># 10 minutes later...</p>
               <p className="terminal-text text-sm text-green-400">[OK] OpenClaw is running!</p>
               <p className="terminal-text text-sm text-blue-300">Your AI agent is live at localhost:3000</p>
             </div>
 
             <div className="mt-6 pt-6 border-t border-blue-500/10">
-              <p className="text-blue-400/70 text-sm italic">Average time: 5 minutes. Success rate: 100%</p>
+              <p className="text-blue-400/70 text-sm italic">Average time: ~10 minutes. Success rate: 100%</p>
             </div>
           </div>
         </div>

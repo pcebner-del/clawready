@@ -5,11 +5,11 @@ import BackToTop from '../components/BackToTop'
 
 export const metadata: Metadata = {
   title: 'ClawReady — OpenClaw for Windows in One Click',
-  description: 'Skip the nightmare WSL2 setup. ClawReady installs OpenClaw on your Windows PC automatically — WSL2, Node.js, systemd, auto-start, everything. Done in 5 minutes.',
+  description: 'Skip the nightmare WSL2 setup. ClawReady installs OpenClaw on your Windows PC automatically — WSL2, Node.js, systemd, auto-start, everything. Done in about 10 minutes.',
   keywords: ['OpenClaw', 'Windows installer', 'WSL2', 'AI agent', 'automation'],
   openGraph: {
     title: 'ClawReady — OpenClaw for Windows in One Click',
-    description: 'Skip the nightmare WSL2 setup. ClawReady installs OpenClaw on Windows automatically in 5 minutes.',
+    description: 'Skip the nightmare WSL2 setup. ClawReady installs OpenClaw on Windows automatically in about 10 minutes.',
     url: 'https://clawreadyapp.com',
     siteName: 'ClawReady',
     type: 'website',

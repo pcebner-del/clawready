@@ -1,6 +1,6 @@
 const reviews = [
   {
-    quote: `I bought a $60 pawnshop laptop and got OpenClaw running in 5 minutes.`,
+    quote: `I bought a $60 pawnshop laptop and got OpenClaw running in under 10 minutes.`,
     highlight: `Would have paid $50.`,
     name: 'Phil E.',
     location: 'Arizona',
@@ -118,7 +118,7 @@ export default function Testimonial() {
         {/* Supporting stats */}
         <div className="grid sm:grid-cols-3 gap-6">
           {[
-            { value: '< 5 min', label: 'Typical install time' },
+            { value: '~10 min', label: 'Typical install time' },
             { value: '100%', label: 'Of testers got it working' },
             { value: '$19', label: 'One-time, no subscription' },
           ].map((stat, i) => (

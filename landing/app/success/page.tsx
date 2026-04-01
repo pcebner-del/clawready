@@ -28,7 +28,7 @@ export default function SuccessPage() {
           You&apos;re in. Let&apos;s get you set up.
         </h1>
         <p className="text-xl text-slate-400 mb-10">
-          Three steps. Under 5 minutes.
+          Three steps. About 10 minutes.
         </p>
 
         {/* Step 1 — Download */}

@@ -76,7 +76,7 @@ export default function Hero() {
                 OpenClaw
               </span>{' '}
               running on Windows{' '}
-              <span className="text-white">in 5 minutes.</span>
+              <span className="text-white">in about 10 minutes.</span>
             </h1>
 
             <p className="text-lg sm:text-xl text-slate-400 leading-relaxed mb-8 break-words">
