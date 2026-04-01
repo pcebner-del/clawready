@@ -271,16 +271,21 @@ function Install-Ubuntu {
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
     Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
 
-    $prevPref = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $installOutput = wsl --install -d $UBUNTU_DISTRO --no-launch 2>&1
-    $ErrorActionPreference = $prevPref
+    # Run wsl --install as a background job so it doesn't block the script indefinitely.
+    # On some machines --no-launch hangs; we let the wait loop below determine success.
+    $installJob = Start-Job -ScriptBlock {
+        param($distro)
+        wsl --install -d $distro --no-launch 2>&1
+    } -ArgumentList $UBUNTU_DISTRO
+    # Give it up to 3 minutes; if it times out we still proceed to the readiness check
+    $null = Wait-Job -Job $installJob -Timeout 180
+    Remove-Job -Job $installJob -Force -ErrorAction SilentlyContinue
 
     Write-OK "$UBUNTU_DISTRO install initiated"
 
-    # Wait for the distro to become accessible (retry up to 60 seconds)
+    # Wait for the distro to become accessible (retry up to 120 seconds)
     Write-Step "Waiting for Ubuntu to initialize..."
-    $maxWait = 60
+    $maxWait = 120
     $waited = 0
     $ubuntuReady = $false
     while ($waited -lt $maxWait) {
