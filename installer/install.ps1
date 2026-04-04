@@ -1066,31 +1066,32 @@ function finishSetup() {
                 if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
                     # Install Claude Code CLI in WSL2 if not present
                     wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
-                    # Feed the token to openclaw auth-profiles.json
+                    # Use openclaw onboard with --auth-choice token for reliable non-interactive token save
                     $token = $json.setup_token
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && printf '%s\n' '$token' | openclaw models auth paste-token --provider anthropic" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw onboard --non-interactive --accept-risk --mode local --auth-choice token --token-provider anthropic --token '$token' --skip-skills --skip-channels --skip-daemon --skip-health --skip-ui" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
-                    # Set bot token and enable Telegram channel (separate commands to avoid silent chain failures)
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.botToken '$token'" 2>&1 | Out-Null
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.enabled true --json" 2>&1 | Out-Null
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
+                    # Use timeout 10 on each config set — openclaw writes to disk then tries daemon IPC
+                    # which can hang on a fresh install. timeout ensures we don't block forever.
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set channels.telegram.botToken '$token'" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set channels.telegram.enabled true --json" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_chat_id'] -and $json.telegram_chat_id) {
                     $chatId = $json.telegram_chat_id
                     # Set allowFrom as JSON array with the user's numeric Telegram ID
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set channels.telegram.allowFrom '[""$chatId""]' --json" 2>&1 | Out-Null
                     # Ensure dmPolicy is allowlist (belt and suspenders)
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set channels.telegram.dmPolicy allowlist" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_name'] -and $json.agent_name) {
                     $name = $json.agent_name
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.name '$name'" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set identity.name '$name'" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['agent_persona'] -and $json.agent_persona) {
                     $persona = $json.agent_persona
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw config set identity.theme '$persona'" 2>&1 | Out-Null
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 10 openclaw config set identity.theme '$persona'" 2>&1 | Out-Null
                 }
             } catch {
                 # Ignore JSON parse errors
