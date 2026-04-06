@@ -1050,7 +1050,7 @@ function Start-OpenClaw {
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "loginctl enable-linger root" 2>&1 | Out-Null
         Start-Sleep -Seconds 1
         # Start OpenClaw in background inside WSL2
-        wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /tmp/openclaw-startup.log 2>&1 &" 2>&1 | Out-Null
+        wsl -u root -d $UBUNTU_DISTRO -- bash -c "sudo systemctl enable openclaw && sudo systemctl start openclaw" 2>&1 | Out-Null
         Start-Sleep -Seconds 5
         Write-OK "OpenClaw started in background"
     } catch {
