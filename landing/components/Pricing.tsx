@@ -82,7 +82,7 @@ export default function Pricing() {
             {/* Header */}
             <div className="px-8 pt-8 pb-6 border-b border-blue-500/10">
               <div className="flex items-end gap-2 mb-2">
-                <span className="text-6xl font-extrabold text-white">$19</span>
+                <span className="text-6xl font-extrabold text-white">$12</span>
                 <span className="text-slate-400 pb-2">one-time</span>
               </div>
               <p className="text-slate-400">
@@ -113,7 +113,7 @@ export default function Pricing() {
                 href="https://buy.stripe.com/test_fZueVc44n7Dv3VP6j31RC01"
                 className="block w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-lg py-4 rounded-xl text-center transition-all duration-200 glow-blue-sm"
               >
-                Get ClawReady — $19
+                Get ClawReady — $12
               </a>
               <p className="text-center text-slate-600 text-xs mt-3">
                 Secure checkout via Stripe. Instant download after payment.
@@ -195,7 +195,11 @@ export default function Pricing() {
               },
               {
                 q: 'Do I need an Anthropic API key?',
-                a: "Yes — you'll need an Anthropic API key. Create an account at console.anthropic.com, add some credits, and paste the key into the setup wizard. Typical usage runs $5–20/month, billed directly by Anthropic.",
+                a: "Yes — you'll need an Anthropic API key. Create an account at console.anthropic.com, add some credits, and paste the key into the setup wizard. Typical usage runs $5–20/month, billed directly by Anthropic. You can set a spending cap in the console so you're never surprised.",
+              },
+              {
+                q: 'How much will the API cost me?',
+                a: 'It depends on how much you use your agent. Light users (a few chats a day) typically spend $2–5/month. Normal daily use runs $5–15/month. Heavy power users might hit $20–40/month. Anthropic lets you set a monthly spending limit so you stay in control.',
               },
               {
                 q: 'Can I use my Claude Pro or Max subscription instead?',

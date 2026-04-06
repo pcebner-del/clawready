@@ -45,9 +45,26 @@ export default function AuthPaths() {
             </li>
           </ol>
 
-          <p className="text-slate-500 text-xs mt-8 pt-6 border-t border-slate-800 leading-relaxed">
-            Typical usage costs $5–20/month depending on how much you chat with your agent. You're billed directly by Anthropic — no markup.
-          </p>
+          <div className="mt-8 pt-6 border-t border-slate-800">
+            <p className="text-slate-400 text-sm font-medium mb-3">What will it cost?</p>
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Light use <span className="text-slate-600">(a few chats/day)</span></span>
+                <span className="text-green-400 font-medium">~$2–5/mo</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Normal daily use</span>
+                <span className="text-green-400 font-medium">~$5–15/mo</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Heavy / power user</span>
+                <span className="text-green-400 font-medium">~$20–40/mo</span>
+              </div>
+            </div>
+            <p className="text-slate-500 text-xs leading-relaxed">
+              Billed directly by Anthropic — no markup. You can set a monthly spending cap in the Anthropic console so you're never surprised.
+            </p>
+          </div>
         </div>
       </div>
     </section>
