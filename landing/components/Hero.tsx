@@ -81,7 +81,7 @@ export default function Hero() {
 
             <p className="text-lg sm:text-xl text-slate-400 leading-relaxed mb-8 break-words">
               ClawReady automates the entire WSL2 setup — so you skip the nightmare and go straight
-              to having an AI agent running 24/7 on your PC. Just grab a free API key from Anthropic and you're set.
+              to having an AI agent running 24/7 on your PC. You'll need an Anthropic API key — sign up at console.anthropic.com, add some credits, and you're set.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">

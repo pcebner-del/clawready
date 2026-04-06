@@ -10,7 +10,7 @@ export default function AuthPaths() {
             You'll need an Anthropic API key
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
-            Free to set up. Takes 2 minutes. You pay Claude directly.
+            Takes 2 minutes. You pay Anthropic directly — no markup.
           </p>
         </div>
 

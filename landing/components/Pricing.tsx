@@ -195,7 +195,7 @@ export default function Pricing() {
               },
               {
                 q: 'Do I need an Anthropic API key?',
-                a: "Yes — you'll need a free API key from console.anthropic.com. Takes 2 minutes to set up. Typical usage runs $5–20/month depending on how much you use your agent, billed directly by Anthropic.",
+                a: "Yes — you'll need an Anthropic API key. Create an account at console.anthropic.com, add some credits, and paste the key into the setup wizard. Typical usage runs $5–20/month, billed directly by Anthropic.",
               },
               {
                 q: 'Can I use my Claude Pro or Max subscription instead?',
