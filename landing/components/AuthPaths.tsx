@@ -5,82 +5,50 @@ export default function AuthPaths() {
     <section className="py-16 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-10">
-          <p className="text-blue-400 font-semibold uppercase tracking-wider text-sm mb-3">How Claude access works</p>
+          <p className="text-blue-400 font-semibold uppercase tracking-wider text-sm mb-3">Getting started with Claude</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-            Already pay for Claude? No extra cost.
+            You'll need an Anthropic API key
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
-            If you already subscribe to Claude Pro or Max, ClawReady connects to your existing account. No API fees. No extra bills.
+            Free to set up. Takes 2 minutes. You pay Claude directly.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Path A */}
-          <div className="bg-gradient-to-b from-[#0d1e3a] to-[#0a1628] rounded-2xl border border-blue-500/30 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 font-bold text-sm flex-shrink-0">
-                A
+        <div className="bg-gradient-to-b from-[#0d1e3a] to-[#0a1628] rounded-2xl border border-blue-500/30 p-8 max-w-2xl mx-auto">
+          <ol className="space-y-5">
+            <li className="flex items-start gap-4">
+              <span className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 font-bold text-sm flex-shrink-0 mt-0.5">
+                1
               </span>
-              <h3 className="text-white font-bold text-lg leading-tight">Already pay for Claude Pro or Max?</h3>
-            </div>
-            <p className="text-slate-400 text-sm mb-5 leading-relaxed">
-              Use your existing subscription — no API key needed, and no extra monthly cost.
-            </p>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-sm">
-                <span className="text-green-400 mt-0.5 flex-shrink-0">✓</span>
-                <span className="text-slate-300">No API key required</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <span className="text-green-400 mt-0.5 flex-shrink-0">✓</span>
-                <span className="text-slate-300">Zero extra monthly cost</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <span className="text-green-400 mt-0.5 flex-shrink-0">✓</span>
-                <span className="text-slate-300">
-                  During setup, just run:{' '}
-                  <code className="bg-[#050a14] border border-blue-500/20 rounded px-1.5 py-0.5 text-blue-300 font-mono text-xs">
-                    claude setup-token
-                  </code>
-                </span>
-              </li>
-            </ul>
-          </div>
+              <div>
+                <p className="text-white font-medium mb-0.5">Go to console.anthropic.com and sign up</p>
+                <p className="text-slate-400 text-sm">Creating an account is free — no credit card required to get started.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 font-bold text-sm flex-shrink-0 mt-0.5">
+                2
+              </span>
+              <div>
+                <p className="text-white font-medium mb-0.5">Create an API key under "API Keys"</p>
+                <p className="text-slate-400 text-sm">It'll look like <code className="bg-[#050a14] border border-blue-500/20 rounded px-1.5 py-0.5 text-blue-300 font-mono text-xs">sk-ant-api03-...</code></p>
+              </div>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 font-bold text-sm flex-shrink-0 mt-0.5">
+                3
+              </span>
+              <div>
+                <p className="text-white font-medium mb-0.5">Paste it into the ClawReady setup wizard</p>
+                <p className="text-slate-400 text-sm">The installer walks you through exactly where to put it.</p>
+              </div>
+            </li>
+          </ol>
 
-          {/* Path B */}
-          <div className="bg-gradient-to-b from-[#0d1e3a] to-[#0a1628] rounded-2xl border border-slate-700/60 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="w-8 h-8 rounded-full bg-slate-700/50 border border-slate-600/40 flex items-center justify-center text-slate-300 font-bold text-sm flex-shrink-0">
-                B
-              </span>
-              <h3 className="text-white font-bold text-lg leading-tight">No Claude subscription?</h3>
-            </div>
-            <p className="text-slate-400 text-sm mb-5 leading-relaxed">
-              Get an Anthropic API key and pay only for what you use — no subscription needed at all.
-            </p>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-sm">
-                <span className="text-blue-400 mt-0.5 flex-shrink-0">→</span>
-                <span className="text-slate-300">
-                  Get a free key at{' '}
-                  <span className="text-blue-400 font-medium">console.anthropic.com</span>
-                </span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <span className="text-blue-400 mt-0.5 flex-shrink-0">→</span>
-                <span className="text-slate-300">Typical cost: $5–20/month for normal use</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <span className="text-blue-400 mt-0.5 flex-shrink-0">→</span>
-                <span className="text-slate-300">No subscription required — pay as you go</span>
-              </li>
-            </ul>
-          </div>
+          <p className="text-slate-500 text-xs mt-8 pt-6 border-t border-slate-800 leading-relaxed">
+            Typical usage costs $5–20/month depending on how much you chat with your agent. You're billed directly by Anthropic — no markup.
+          </p>
         </div>
-
-        <p className="text-center text-slate-600 text-xs mt-6">
-          The ClawReady setup wizard walks you through whichever path you choose.
-        </p>
       </div>
     </section>
   )

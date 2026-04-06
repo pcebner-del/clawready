@@ -13,7 +13,6 @@ const included = [
   'Windows Update hardening',
   'Browser-based setup wizard',
   'Anthropic API key configuration',
-  'Claude Pro/Max subscription support (no API key needed)',
   'Telegram bot setup assistant',
   'Agent name & personality quick setup',
 ]
@@ -195,8 +194,12 @@ export default function Pricing() {
                 a: 'The installer checks each step before proceeding and tells you exactly what failed. It\'s idempotent — you can run it again safely. Loki (the chat widget below) can also help troubleshoot.',
               },
               {
-                q: 'Do I still need an Anthropic API key?',
-                a: 'Not if you already pay for Claude Pro or Max. The setup wizard gives you two options: (A) paste your API key, or (B) use your Claude subscription. For option B, run this in the PowerShell window you already have open: wsl -d Ubuntu-22.04 -- bash -c "source ~/.nvm/nvm.sh && claude setup-token" — copy the token it outputs, paste it into the wizard, done. No API key, no extra fees. Forgot your token later? Just run it again — it generates a fresh one every time. No subscription? Grab an API key at console.anthropic.com — typical usage runs $5–20/month.',
+                q: 'Do I need an Anthropic API key?',
+                a: "Yes — you'll need a free API key from console.anthropic.com. Takes 2 minutes to set up. Typical usage runs $5–20/month depending on how much you use your agent, billed directly by Anthropic.",
+              },
+              {
+                q: 'Can I use my Claude Pro or Max subscription instead?',
+                a: 'Claude Pro/Max subscriptions no longer work with third-party tools like OpenClaw as of April 4, 2026. ClawReady uses API keys instead — no subscription required.',
               },
               {
                 q: 'Is this affiliated with Anthropic?',

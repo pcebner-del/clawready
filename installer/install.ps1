@@ -734,7 +734,7 @@ function Start-SetupWizard {
     </p>
     <div class="info-box">
       You'll need:
-      <br>&#x2022; An Anthropic API key <strong>OR</strong> a Claude Pro/Max subscription
+      <br>&#x2022; An Anthropic API key from <strong>console.anthropic.com</strong>
       <br>&#x2022; A Telegram account (optional, for messaging your agent)
     </div>
     <button class="btn" onclick="nextPanel(1)">Let's go &rarr;</button>
@@ -743,12 +743,6 @@ function Start-SetupWizard {
   <!-- Panel 2: Anthropic Auth -->
   <div class="panel" id="panel-2">
     <p class="panel-title"><span class="step-num">1</span> Connect to Anthropic</p>
-    <!-- Auth mode tabs -->
-    <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">
-      <button class="btn" id="tab-apikey" style="flex:1;background:#2563eb;color:white;border:none;" onclick="switchAuthTab('apikey')">API Key</button>
-      <button class="btn" id="tab-subscription" style="flex:1;background:transparent;border:1px solid #334155;color:#94a3b8;" onclick="switchAuthTab('subscription')">Claude Subscription</button>
-    </div>
-
     <!-- Mode A: API Key -->
     <div id="auth-apikey">
       <p class="panel-desc">
@@ -761,24 +755,6 @@ function Start-SetupWizard {
         Your key is stored locally in OpenClaw's config on your machine.
         It is never sent to ClawReady servers.
       </div>
-    </div>
-
-    <!-- Mode B: Claude Subscription -->
-    <div id="auth-subscription" style="display:none;">
-      <div class="info-box">
-        Already paying for Claude Pro or Max? Use your existing subscription &mdash; no extra API fees.
-      </div>
-      <p class="panel-desc">
-        Open a <strong style="color:#e2e8f0">new PowerShell window</strong> (Start &rarr; search PowerShell &rarr; Run as Administrator), then paste this command:<br><br>
-        <code style="color:#60a5fa;background:#050a14;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;" id="setup-token-cmd">wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh &amp;&amp; npm install -g @anthropic-ai/claude-code &amp;&amp; claude setup-token"</code>
-        <button id="copy-token-cmd-btn" onclick="(function(btn){navigator.clipboard.writeText(document.getElementById('setup-token-cmd').innerText).then(function(){btn.textContent='Copied!';btn.style.background='#14532d';btn.style.borderColor='#22c55e';btn.style.color='#86efac';setTimeout(function(){btn.textContent='Copy';btn.style.background='#1e3a6e';btn.style.borderColor='#3b82f6';btn.style.color='#60a5fa';},2000);}).catch(function(){btn.textContent='Failed';setTimeout(function(){btn.textContent='Copy';},2000);});})(this)" style="background:#1e3a6e;border:1px solid #3b82f6;color:#60a5fa;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;margin-left:6px;">Copy</button><br><br>
-        It will install Claude Code and open your browser to log in to Claude. Once done, copy the token it outputs and paste it below.<br><br>
-        <span style="color:#fbbf24;font-size:0.85rem;">&#9888; If your browser doesn&apos;t open automatically, <strong>manually highlight the URL in the terminal and copy it</strong>, then paste it in your browser.</span><br><br>
-        <span style="color:#64748b;font-size:0.8rem;">&#128161; <strong>Tip:</strong> To paste into the terminal, <strong>right-click</strong> (or two-finger tap on a touchpad) &mdash; Ctrl+V does not work in most terminals.</span><br><br>
-        <span style="color:#64748b;font-size:0.8rem;">&#128161; Forgot your token later? Just run the command again &mdash; it generates a fresh one every time.</span>
-      </p>
-      <label for="setup-token">Setup Token</label>
-      <input type="text" id="setup-token" placeholder="sk-ant-oat-..." autocomplete="off" />
     </div>
 
     <button class="btn" onclick="saveApiKey()">Continue &rarr;</button>
@@ -849,30 +825,6 @@ function Start-SetupWizard {
 
 <script>
 let currentPanel = 1;
-let authTab = 'apikey';
-
-function switchAuthTab(tab) {
-  authTab = tab;
-  if (tab === 'apikey') {
-    document.getElementById('auth-apikey').style.display = '';
-    document.getElementById('auth-subscription').style.display = 'none';
-    document.getElementById('tab-apikey').style.background = '#2563eb';
-    document.getElementById('tab-apikey').style.color = 'white';
-    document.getElementById('tab-apikey').style.border = 'none';
-    document.getElementById('tab-subscription').style.background = 'transparent';
-    document.getElementById('tab-subscription').style.color = '#94a3b8';
-    document.getElementById('tab-subscription').style.border = '1px solid #334155';
-  } else {
-    document.getElementById('auth-apikey').style.display = 'none';
-    document.getElementById('auth-subscription').style.display = '';
-    document.getElementById('tab-apikey').style.background = 'transparent';
-    document.getElementById('tab-apikey').style.color = '#94a3b8';
-    document.getElementById('tab-apikey').style.border = '1px solid #334155';
-    document.getElementById('tab-subscription').style.background = '#2563eb';
-    document.getElementById('tab-subscription').style.color = 'white';
-    document.getElementById('tab-subscription').style.border = 'none';
-  }
-}
 
 function nextPanel(from) {
   document.getElementById('panel-' + from).classList.remove('active');
@@ -886,32 +838,17 @@ function nextPanel(from) {
 }
 
 function saveApiKey() {
-  if (authTab === 'apikey') {
-    const key = document.getElementById('api-key').value.trim();
-    if (key && !key.startsWith('sk-ant-')) {
-      alert('That does not look like an Anthropic API key. It should start with sk-ant-');
-      return;
-    }
-    if (key) {
-      fetch('/save-config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ anthropic_api_key: key })
-      }).catch(() => {});
-    }
-  } else {
-    const token = document.getElementById('setup-token').value.trim();
-    if (token && !token.startsWith('sk-ant-oat')) {
-      alert('That does not look like a valid setup token. It should start with sk-ant-oat');
-      return;
-    }
-    if (token) {
-      fetch('/save-config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ setup_token: token })
-      }).catch(() => {});
-    }
+  const key = document.getElementById('api-key').value.trim();
+  if (key && !key.startsWith('sk-ant-')) {
+    alert('That does not look like an Anthropic API key. It should start with sk-ant-');
+    return;
+  }
+  if (key) {
+    fetch('/save-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ anthropic_api_key: key })
+    }).catch(() => {});
   }
   nextPanel(2);
 }
@@ -1062,13 +999,6 @@ function finishSetup() {
                     $key = $json.anthropic_api_key
                     # Use openclaw onboard --non-interactive to store API key in auth-profiles.json
                     wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --accept-risk --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
-                }
-                if ($json.PSObject.Properties['setup_token'] -and $json.setup_token) {
-                    # Install Claude Code CLI in WSL2 if not present
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && command -v claude || npm install -g @anthropic-ai/claude-code" 2>&1 | Out-Null
-                    # Use openclaw onboard with --auth-choice token for reliable non-interactive token save
-                    $token = $json.setup_token
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw onboard --non-interactive --accept-risk --mode local --auth-choice token --token-provider anthropic --token '$token' --skip-skills --skip-channels --skip-daemon --skip-health --skip-ui" 2>&1 | Out-Null
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
