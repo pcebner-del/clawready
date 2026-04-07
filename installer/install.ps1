@@ -1043,15 +1043,12 @@ function Start-OpenClaw {
     Write-Step "Starting OpenClaw for the first time..."
 
     try {
-        # Repair service config first (fixes PATH and systemd unit issues)
-        wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw doctor --repair" 2>&1 | Out-Null
-        Start-Sleep -Seconds 2
         # Enable systemd linger for root so the user service session survives after terminal closes
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "loginctl enable-linger root" 2>&1 | Out-Null
         Start-Sleep -Seconds 1
         # Enable and start OpenClaw via systemd (persists across reboots)
-        wsl -u root -d $UBUNTU_DISTRO -- bash -c "sudo systemctl enable openclaw" 2>&1 | Out-Null
-        wsl -u root -d $UBUNTU_DISTRO -- bash -c "sudo systemctl start openclaw" 2>&1 | Out-Null
+        wsl -u root -d $UBUNTU_DISTRO -- bash -c "systemctl --user enable openclaw-gateway" 2>&1 | Out-Null
+        wsl -u root -d $UBUNTU_DISTRO -- bash -c "systemctl --user start openclaw-gateway" 2>&1 | Out-Null
         Start-Sleep -Seconds 5
         Write-OK "OpenClaw service enabled and started"
     } catch {
@@ -1130,6 +1127,10 @@ function Main {
     Set-BootTask
     Set-PowerSettings
     Set-WindowsUpdatePolicy
+    # Run doctor --repair BEFORE wizard so Telegram config written by wizard is not overwritten
+    Write-Step "Running pre-flight repair..."
+    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw doctor --repair" 2>&1 | Out-Null
+    Write-OK "Pre-flight repair done"
     Start-SetupWizard
     Start-OpenClaw
     Show-Success
