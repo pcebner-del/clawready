@@ -1054,10 +1054,17 @@ function Start-OpenClaw {
         # Enable systemd linger for root so the user service session survives after terminal closes
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "loginctl enable-linger root" 2>&1 | Out-Null
         Start-Sleep -Seconds 1
-        # Enable and start OpenClaw via systemd (persists across reboots)
+        # Try systemd first, fall back to nohup if systemd is not working
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "systemctl --user enable openclaw-gateway" 2>&1 | Out-Null
         wsl -u root -d $UBUNTU_DISTRO -- bash -c "systemctl --user start openclaw-gateway" 2>&1 | Out-Null
         Start-Sleep -Seconds 5
+        # Verify gateway is actually running — fallback to nohup if systemd failed
+        $gwCheck = wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && openclaw status 2>/dev/null | grep -i 'gateway' | grep -v 'unreachable' | grep -c 'local' || echo 0"
+        if ($gwCheck -eq '0' -or $gwCheck -eq '') {
+            # systemd didn't work — start gateway directly with nohup
+            wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && nohup openclaw gateway start > /root/.openclaw/gateway.log 2>&1 &" 2>&1 | Out-Null
+            Start-Sleep -Seconds 5
+        }
         Write-OK "OpenClaw service enabled and started"
     } catch {
         Write-Warn "Could not auto-start OpenClaw: $_"
