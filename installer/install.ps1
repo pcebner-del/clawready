@@ -124,6 +124,32 @@ function Assert-Administrator {
 # -----------------------------------------------------------------------------
 # Step 2: Windows version check
 # -----------------------------------------------------------------------------
+function Assert-Virtualization {
+    $cpu = Get-WmiObject -Class Win32_Processor -ErrorAction SilentlyContinue
+    $vmxEnabled = ($cpu | Where-Object { $_.VirtualizationFirmwareEnabled -eq $true }) -ne $null
+    if (-not $vmxEnabled) {
+        Write-Host ""
+        Write-Host "  " -NoNewline
+        Write-Host " VIRTUALIZATION IS DISABLED " -ForegroundColor Black -BackgroundColor Red
+        Write-Host ""
+        Write-Host "  WSL2 requires hardware virtualization to be enabled in your BIOS." -ForegroundColor White
+        Write-Host ""
+        Write-Host "  To fix this:" -ForegroundColor Yellow
+        Write-Host "    1. Restart your PC" -ForegroundColor Yellow
+        Write-Host "    2. Enter BIOS setup (usually F2 or Delete key on startup)" -ForegroundColor Yellow
+        Write-Host "    3. Find 'Virtualization Technology', 'Intel VT-x', or 'AMD-V'" -ForegroundColor Yellow
+        Write-Host "    4. Enable it, save, and reboot" -ForegroundColor Yellow
+        Write-Host "    5. Re-run this installer" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Note: Some older PCs do not support virtualization at all." -ForegroundColor DarkGray
+        Write-Host "  Check your PC manufacturer's website to confirm." -ForegroundColor DarkGray
+        Write-Host ""
+        Pause-ForUser
+        exit 0
+    }
+    Write-OK "Hardware virtualization enabled"
+}
+
 function Assert-WindowsVersion {
     Write-Step "Checking Windows version..."
 
@@ -1172,6 +1198,7 @@ function Main {
     # Run all steps in order
     Assert-Administrator
     Assert-WindowsVersion
+    Assert-Virtualization
     Enable-WSL2
     Install-Ubuntu
     Set-WSLSystemd
