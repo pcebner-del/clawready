@@ -1120,6 +1120,12 @@ function Main {
     Write-Host "    - Install Node.js LTS and OpenClaw" -ForegroundColor DarkGray
     Write-Host "    - Configure auto-start, sleep prevention, and more" -ForegroundColor DarkGray
     Write-Host ""
+    Write-Host "  " -NoNewline
+    Write-Host " HEADS UP " -ForegroundColor Black -BackgroundColor Yellow -NoNewline
+    Write-Host "  If WSL2 is not yet enabled on this PC, a reboot will" -ForegroundColor Yellow
+    Write-Host "  be required partway through. The installer will tell you" -ForegroundColor Yellow
+    Write-Host "  exactly what to do -- just re-run it after rebooting." -ForegroundColor Yellow
+    Write-Host ""
 
     $choice = Read-Host "  Ready to begin? [Y/n]"
     if ($choice -eq 'n' -or $choice -eq 'N') {
