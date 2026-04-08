@@ -837,19 +837,16 @@ function nextPanel(from) {
   }
 }
 
+// Collect all config in memory — send everything at once at the end (no race conditions)
+window._config = {};
+
 function saveApiKey() {
   const key = document.getElementById('api-key').value.trim();
   if (key && !key.startsWith('sk-ant-')) {
     alert('That does not look like an Anthropic API key. It should start with sk-ant-');
     return;
   }
-  if (key) {
-    fetch('/save-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ anthropic_api_key: key })
-    }).catch(() => {});
-  }
+  if (key) window._config.anthropic_api_key = key;
   nextPanel(2);
 }
 
@@ -861,11 +858,8 @@ function saveTelegram() {
     return;
   }
   if (token && chatId) {
-    fetch('/save-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telegram_token: token, telegram_chat_id: chatId })
-    }).catch(() => {});
+    window._config.telegram_token = token;
+    window._config.telegram_chat_id = chatId;
     // Fetch bot username from Telegram so we can show it on the success screen
     fetch('https://api.telegram.org/bot' + token + '/getMe')
       .then(r => r.json())
@@ -881,13 +875,14 @@ function saveTelegram() {
 function finishSetup() {
   const name = document.getElementById('agent-name').value.trim() || 'Claw';
   const persona = document.getElementById('agent-persona').value.trim();
-  fetch('/save-config', {
+  window._config.agent_name = name;
+  if (persona) window._config.agent_persona = persona;
+  // Send everything in ONE request at the end — no race conditions
+  fetch('/setup-complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ agent_name: name, agent_persona: persona, setup_complete: true })
-  })
-  .catch(() => {})
-  .finally(() => fetch('/setup-complete').catch(() => {}));
+    body: JSON.stringify(window._config)
+  }).catch(() => {});
   document.getElementById('panel-4').classList.remove('active');
   document.getElementById('dot-4').classList.remove('active');
   document.getElementById('dot-4').classList.add('done');
@@ -938,7 +933,14 @@ function finishSetup() {
                     $body | Out-File -FilePath "$configOut.json" -Append -Encoding UTF8
                     $response.StatusCode = 200
 
-                } elseif ($request.Url.AbsolutePath -eq "/setup-complete") {
+                } elseif ($request.HttpMethod -eq "POST" -and $request.Url.AbsolutePath -eq "/setup-complete") {
+                    # Read the full config payload sent in one shot from the wizard
+                    $reader = [System.IO.StreamReader]::new($request.InputStream)
+                    $body   = $reader.ReadToEnd()
+                    $reader.Close()
+                    # Write config to file
+                    $body | Out-File -FilePath "$configOut.json" -Encoding UTF8
+                    # Signal completion
                     "done" | Out-File -FilePath "$configOut.done" -Encoding UTF8
                     $response.StatusCode = 200
                     $done = $true
