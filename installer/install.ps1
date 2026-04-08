@@ -322,9 +322,39 @@ function Install-Ubuntu {
     }
 
     if (-not $ubuntuReady) {
-        Write-Fail "Ubuntu installed but not responding after 60 seconds."
-        Write-Host "  Try rebooting your PC and re-running this installer." -ForegroundColor Gray
-        exit 1
+        # Ubuntu may need first-run initialization — try to trigger it headlessly
+        Write-Step "Triggering Ubuntu first-run initialization..."
+        $initJob = Start-Job -ScriptBlock {
+            param($distro)
+            # Run Ubuntu once to trigger filesystem initialization
+            wsl -d $distro -u root -- bash -c "echo initialized" 2>&1
+        } -ArgumentList $UBUNTU_DISTRO
+        $null = Wait-Job -Job $initJob -Timeout 120
+        Remove-Job -Job $initJob -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 10
+        # Try again
+        $test2 = wsl -u root -d $UBUNTU_DISTRO -- echo "ok" 2>&1
+        if ($LASTEXITCODE -eq 0 -and ($test2 -join '') -match 'ok') {
+            $ubuntuReady = $true
+        }
+    }
+
+    if (-not $ubuntuReady) {
+        Write-Host ""
+        Write-Host "  " -NoNewline
+        Write-Host " ACTION REQUIRED " -ForegroundColor Black -BackgroundColor Yellow
+        Write-Host ""
+        Write-Host "  Ubuntu needs a one-time manual setup:" -ForegroundColor White
+        Write-Host "    1. Click Start, search 'Ubuntu', open it" -ForegroundColor Yellow
+        Write-Host "    2. Wait for 'Installing...' to finish" -ForegroundColor Yellow
+        Write-Host "    3. Enter any username and password when prompted" -ForegroundColor Yellow
+        Write-Host "    4. Type 'exit' and close that window" -ForegroundColor Yellow
+        Write-Host "    5. Re-run this installer" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "       irm https://clawreadyapp.com/install.ps1 | iex" -ForegroundColor Cyan
+        Write-Host ""
+        Pause-ForUser
+        exit 0
     }
 
     Write-OK "Ubuntu verified and ready"
