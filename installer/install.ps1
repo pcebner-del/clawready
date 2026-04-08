@@ -278,6 +278,14 @@ function Install-Ubuntu {
 
     Write-Step "Ubuntu not initialized in WSL — installing now..."
 
+    Write-Host ""
+    Write-Host "  " -NoNewline
+    Write-Host " IMPORTANT " -ForegroundColor Black -BackgroundColor Yellow -NoNewline
+    Write-Host "  Do NOT close this window during installation!" -ForegroundColor Yellow
+    Write-Host "  Ubuntu may open a separate setup window — let it finish," -ForegroundColor Yellow
+    Write-Host "  then come back here. This window must stay open." -ForegroundColor Yellow
+    Write-Host ""
+
     Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
     Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
 
