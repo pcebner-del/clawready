@@ -997,8 +997,14 @@ function finishSetup() {
                 $json = $line | ConvertFrom-Json
                 if ($json.PSObject.Properties['anthropic_api_key'] -and $json.anthropic_api_key) {
                     $key = $json.anthropic_api_key
-                    # Use openclaw onboard --non-interactive to store API key in auth-profiles.json
-                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && ANTHROPIC_API_KEY='$key' openclaw onboard --non-interactive --accept-risk --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
+                    # Run onboard with timeout — no timeout caused silent hangs on fresh installs
+                    wsl -u root -d $UBUNTU_DISTRO -- bash -c "source ~/.nvm/nvm.sh && timeout 60 openclaw onboard --non-interactive --accept-risk --mode local --auth-choice apiKey --anthropic-api-key '$key' --secret-input-mode plaintext --skip-skills --skip-channels --skip-health --skip-ui" 2>&1 | Out-Null
+                    # Verify auth-profiles.json was actually written — if not, write it directly
+                    $authCheck = wsl -u root -d $UBUNTU_DISTRO -- bash -c "test -f ~/.openclaw/agents/main/agent/auth-profiles.json && echo 'exists' || echo 'missing'"
+                    if ($authCheck -notmatch 'exists') {
+                        # Fallback: write credentials file directly using openclaw's confirmed format
+                        wsl -u root -d $UBUNTU_DISTRO -- bash -c "mkdir -p ~/.openclaw/agents/main/agent && printf '{\"version\":1,\"profiles\":{\"anthropic:default\":{\"type\":\"api_key\",\"provider\":\"anthropic\",\"key\":\"%s\"}},\"lastGood\":{\"anthropic\":\"anthropic:default\"}}' '$key' > ~/.openclaw/agents/main/agent/auth-profiles.json" 2>&1 | Out-Null
+                    }
                 }
                 if ($json.PSObject.Properties['telegram_token'] -and $json.telegram_token) {
                     $token = $json.telegram_token
