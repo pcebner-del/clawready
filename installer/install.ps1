@@ -207,11 +207,21 @@ function Enable-WSL2 {
     }
 
     if ($needsReboot) {
-        Write-Warn "A reboot is required to complete WSL2 setup."
         Write-Host ""
-        Write-Host "  After rebooting:" -ForegroundColor White
-        Write-Host "    1. Open PowerShell as Administrator" -ForegroundColor Gray
-        Write-Host "    2. Re-run this script - it will continue from where it left off" -ForegroundColor Gray
+        Write-Host "  =========================================" -ForegroundColor Cyan
+        Write-Host "   REBOOT REQUIRED TO CONTINUE" -ForegroundColor Cyan
+        Write-Host "  =========================================" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  WSL2 has been enabled but needs a reboot to activate." -ForegroundColor White
+        Write-Host ""
+        Write-Host "  IMPORTANT - After rebooting:" -ForegroundColor Yellow
+        Write-Host "    1. Open PowerShell as Administrator" -ForegroundColor Yellow
+        Write-Host "    2. Run this command again:" -ForegroundColor Yellow
+        Write-Host "" 
+        Write-Host "       irm https://clawreadyapp.com/install.ps1 | iex" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  The installer will pick up where it left off." -ForegroundColor White
+        Write-Host "  =========================================" -ForegroundColor Cyan
         Write-Host ""
         $choice = Read-Host "  Reboot now? [Y/n]"
         if ($choice -ne 'n' -and $choice -ne 'N') {
