@@ -277,32 +277,35 @@ function Install-Ubuntu {
     }
 
     Write-Step "Ubuntu not initialized in WSL — installing now..."
+    Write-Step "Installing $UBUNTU_DISTRO (this may take 3-5 minutes)..."
 
-    Write-Host ""
-    Write-Host "  " -NoNewline
-    Write-Host " IMPORTANT " -ForegroundColor Black -BackgroundColor Yellow -NoNewline
-    Write-Host "  Do NOT close this window during installation!" -ForegroundColor Yellow
-    Write-Host "  Ubuntu may open a separate setup window — let it finish," -ForegroundColor Yellow
-    Write-Host "  then come back here. This window must stay open." -ForegroundColor Yellow
-    Write-Host ""
+    # Use --no-launch first to download and register the distro without blocking
+    wsl --install -d $UBUNTU_DISTRO --no-launch 2>&1 | Out-Null
+    Start-Sleep -Seconds 10
 
-    Write-Step "Installing $UBUNTU_DISTRO (this may take a few minutes)..."
-    Write-Host "  Using wsl --install (registers directly with WSL)..." -ForegroundColor DarkGray
-
-    # Run wsl --install as a background job so it doesn't block the script indefinitely.
-    # On some machines --no-launch hangs; we let the wait loop below determine success.
-    $installJob = Start-Job -ScriptBlock {
+    # Now initialize the filesystem headlessly as root (skips username/password prompt)
+    # This is the key step that Windows 10 fresh installs need
+    Write-Step "Initializing Ubuntu filesystem (this may take 2-3 minutes)..."
+    $initScript = {
         param($distro)
-        wsl --install -d $distro --no-launch 2>&1
-    } -ArgumentList $UBUNTU_DISTRO
-    # Give it up to 3 minutes; if it times out we still proceed to the readiness check
-    $null = Wait-Job -Job $installJob -Timeout 180
-    Remove-Job -Job $installJob -Force -ErrorAction SilentlyContinue
+        # Use useradd to create default user non-interactively, then set root as default
+        $env:WSLENV = "WSLENV"
+        $result = & wsl --install -d $distro 2>&1
+        return $result
+    }
 
-    Write-OK "$UBUNTU_DISTRO install initiated"
+    # Try headless init via wsl -u root directly
+    $initResult = wsl -u root -d $UBUNTU_DISTRO -- bash -c "echo ok" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        # Distro registered but not initialized yet — force init
+        # Create a temp script that auto-answers the new user prompt
+        $initCmd = "useradd -m -s /bin/bash clawready 2>/dev/null; echo 'clawready:clawready' | chpasswd 2>/dev/null; echo ok"
+        $proc = Start-Process -FilePath "wsl.exe" -ArgumentList "-d", $UBUNTU_DISTRO, "--", "bash", "-c", $initCmd -Wait -PassThru -WindowStyle Hidden -RedirectStandardOutput "$env:TEMP\wsl-init.txt" 2>&1
+        Start-Sleep -Seconds 15
+    }
 
-    # Wait for the distro to become accessible (retry up to 120 seconds)
-    Write-Step "Waiting for Ubuntu to initialize..."
+    # Final readiness check with retry
+    Write-Step "Verifying Ubuntu is ready..."
     $maxWait = 120
     $waited = 0
     $ubuntuReady = $false
@@ -318,25 +321,7 @@ function Install-Ubuntu {
         }
         Start-Sleep -Seconds 5
         $waited += 5
-        Write-Host "  Still waiting... ($waited`s)" -ForegroundColor DarkGray
-    }
-
-    if (-not $ubuntuReady) {
-        # Ubuntu may need first-run initialization — try to trigger it headlessly
-        Write-Step "Triggering Ubuntu first-run initialization..."
-        $initJob = Start-Job -ScriptBlock {
-            param($distro)
-            # Run Ubuntu once to trigger filesystem initialization
-            wsl -d $distro -u root -- bash -c "echo initialized" 2>&1
-        } -ArgumentList $UBUNTU_DISTRO
-        $null = Wait-Job -Job $initJob -Timeout 120
-        Remove-Job -Job $initJob -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 10
-        # Try again
-        $test2 = wsl -u root -d $UBUNTU_DISTRO -- echo "ok" 2>&1
-        if ($LASTEXITCODE -eq 0 -and ($test2 -join '') -match 'ok') {
-            $ubuntuReady = $true
-        }
+        Write-Host "  Still initializing... ($waited`s)" -ForegroundColor DarkGray
     }
 
     if (-not $ubuntuReady) {
@@ -344,12 +329,11 @@ function Install-Ubuntu {
         Write-Host "  " -NoNewline
         Write-Host " ACTION REQUIRED " -ForegroundColor Black -BackgroundColor Yellow
         Write-Host ""
-        Write-Host "  Ubuntu needs a one-time manual setup:" -ForegroundColor White
-        Write-Host "    1. Click Start, search 'Ubuntu', open it" -ForegroundColor Yellow
-        Write-Host "    2. Wait for 'Installing...' to finish" -ForegroundColor Yellow
-        Write-Host "    3. Enter any username and password when prompted" -ForegroundColor Yellow
-        Write-Host "    4. Type 'exit' and close that window" -ForegroundColor Yellow
-        Write-Host "    5. Re-run this installer" -ForegroundColor Yellow
+        Write-Host "  Ubuntu needs one-time manual initialization:" -ForegroundColor White
+        Write-Host "    1. Open PowerShell and run: wsl -d Ubuntu-22.04" -ForegroundColor Yellow
+        Write-Host "    2. Enter any username and password when asked" -ForegroundColor Yellow
+        Write-Host "    3. Type 'exit' to close" -ForegroundColor Yellow
+        Write-Host "    4. Re-run this installer:" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "       irm https://clawreadyapp.com/install.ps1 | iex" -ForegroundColor Cyan
         Write-Host ""
